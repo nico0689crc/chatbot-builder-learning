@@ -67,3 +67,26 @@ chatRouter.post('/', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Error al generar respuesta' })
   }
 })
+
+chatRouter.post('/crear-cliente', async (req: Request, res: Response) => {
+  try {
+    const { nombre, systemPrompt } = req.body
+
+    if (!nombre || !systemPrompt) {
+      return res.status(400).json({ error: 'Faltan campos' })
+    }
+
+    const cliente = await prisma.cliente.create({
+      data: {
+        nombre,
+        systemPrompt,
+      },
+    })
+
+    return res.json(cliente)
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: 'Error al crear cliente' })
+  }
+})
+
