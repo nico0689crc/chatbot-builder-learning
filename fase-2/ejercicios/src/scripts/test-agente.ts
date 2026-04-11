@@ -15,41 +15,27 @@ const prisma = new PrismaClient({
 })
 
 async function enviarMensaje(config: ConfigCliente, usuarioId: string, texto: string) {
-  // TODO 1: obtener o crear la conversación para (config.id, usuarioId)
-  //         usar obtenerOCrearConversacion()
   const conversacionId = await obtenerOCrearConversacion(config.id, usuarioId)
-
-  // TODO 2: traer el historial actual de esa conversación
-  //         usar obtenerHistorial()
   const historial = await obtenerHistorial(conversacionId)
-
-  // TODO 3: guardar el mensaje del usuario
-  //         usar guardarMensaje() con rol 'user'
   await guardarMensaje(conversacionId, 'user', texto)
-
-  // TODO 4: llamar a generarRespuesta() con config, historial y texto
-  //         luego guardar la respuesta con rol 'assistant'
-  //         y retornarla
   const respuesta = await generarRespuesta(config, historial, texto)
   await guardarMensaje(conversacionId, 'assistant', respuesta)
-
   return respuesta
 }
 
 async function main() {
-  // Cargar el cliente desde la DB
   const cliente = await prisma.cliente.findFirst({
-    where: { nombre: 'Restaurante Don Pepito' },
+    where: { nombre: 'Clínica San Martín' },
   })
 
   if (!cliente) {
-    throw new Error('Corré seed.ts primero')
+    throw new Error('Corré seed-turnos.ts primero')
   }
 
   const config: ConfigCliente = {
     id: cliente.id,
     nombre: cliente.nombre,
-    arquetipo: Arquetipo.FAQ,
+    arquetipo: Arquetipo.TURNOS,
     systemPrompt: cliente.systemPrompt,
     modelo: cliente.modelo,
     temperatura: cliente.temperatura,
@@ -60,17 +46,23 @@ async function main() {
     createdAt: cliente.creadoEn,
   }
 
-  const usuarioId = 'usuario-test-2'
+  const usuarioId = 'paciente-test-1'
 
-  // Mensaje 1
-  console.log('👤 Usuario: ¿Qué días abren?')
-  const resp1 = await enviarMensaje(config, usuarioId, '¿Qué días abren?')
+  console.log('👤 Quiero turno para el martes')
+  const resp1 = await enviarMensaje(config, usuarioId, 'Quiero turno para el martes')
   console.log('🤖 Bot:', resp1)
 
-  // Mensaje 2 — debe recordar el contexto
-  console.log('\n👤 Usuario: ¿Y el domingo?')
-  const resp2 = await enviarMensaje(config, usuarioId, '¿Y el domingo?')
+  console.log('\n👤 El martes a las 10 me viene bien')
+  const resp2 = await enviarMensaje(config, usuarioId, 'El martes a las 10 me viene bien')
   console.log('🤖 Bot:', resp2)
+
+  console.log('\n👤 ¿Cuáles son los horarios disponibles?')
+  const resp3 = await enviarMensaje(config, usuarioId, '¿Cuáles son los horarios disponibles?')
+  console.log('🤖 Bot:', resp3)
+
+  console.log('\n👤 Hola, ¿cómo están?')
+  const resp4 = await enviarMensaje(config, usuarioId, 'Hola, ¿cómo están?')
+  console.log('🤖 Bot:', resp4)
 }
 
 main()

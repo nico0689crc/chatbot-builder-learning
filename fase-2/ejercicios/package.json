@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "test:ia": "ts-node -r tsconfig-paths/register src/scripts/test-ia.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && node --max-old-space-size=4096 node_modules/.bin/tsc",
     "start": "node -r tsconfig-paths/register dist/fase-2/ejercicios/src/index.js"
   },
   "dependencies": {

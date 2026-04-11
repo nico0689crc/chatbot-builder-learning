@@ -3,15 +3,17 @@ import { tool } from "@langchain/core/tools";
 
 export const verificarDisponibilidad = tool(
   async ({ fecha }) => {
-    return `Horarios disponibles para ${fecha}: 10:00, 15:00, 17:00`
+    const periodo = fecha ?? 'próximos días'
+    return `Horarios disponibles para ${periodo}: 10:00, 15:00, 17:00`
   },
   {
     name: "verificar_disponibilidad",
     description: "Consulta los horarios libres para un día específico. " +
       "Usá esta tool cuando el usuario pregunta qué turnos hay disponibles, " +
-      "qué horarios tiene la clínica, o si puede sacar turno en una fecha.",
+      "qué horarios tiene la clínica, o si puede sacar turno en una fecha. " +
+      "Si el usuario no especifica fecha, consultá con fecha 'próximos días'.",
     schema: z.object({
-      fecha: z.string().describe("La fecha a consultar, ej: 'martes', '2025-04-15'"),
+      fecha: z.string().optional().describe("La fecha a consultar, ej: 'martes', '2025-04-15'. Si no se especifica, se consultan los próximos días disponibles."),
     }),
   }
 )
