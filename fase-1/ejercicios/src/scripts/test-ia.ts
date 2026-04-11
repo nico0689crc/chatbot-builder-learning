@@ -1,44 +1,78 @@
-// fase-1/ejercicios/src/scripts/test-ia.ts
-
 import 'dotenv/config'
+import { PrismaClient } from '../generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { generarRespuesta } from '../services/ia.service'
-import type { ConfigCliente, Mensaje } from '@shared/types/chatbot.types'
+import {
+  obtenerOCrearConversacion,
+  obtenerHistorial,
+  guardarMensaje,
+} from '../services/historial.service'
+import type { ConfigCliente } from '@shared/types/chatbot.types'
 import { Arquetipo, Canal } from '@shared/types/chatbot.types'
 
-// TODO 1: Definir una ConfigCliente de prueba para un restaurante
-const configRestaurante: ConfigCliente = {
-  id: 'cliente-prueba-1',
-  nombre: 'La Parrilla de Mario',
-  arquetipo: Arquetipo.FAQ,
-  systemPrompt: `Sos el asistente virtual de "La Parrilla de Mario", un restaurante argentino.
-Solo respondés preguntas sobre el menú, horarios y reservas.
-Horario: martes a domingo de 12:00 a 15:00 y de 20:00 a 23:30.
-Menú destacado: milanesa napolitana $8500, bife de chorizo $12000, empanadas $1500 c/u.
-Sos amable, conciso y respondés en español rioplatense.`,
-  modelo: 'gemini-2.5-flash',
-  temperatura: 0.7,
-  maxTokens: 512,
-  maxHistorial: 10,
-  canales: [Canal.WEB],
-  activo: true,
-  createdAt: new Date(),
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+})
+
+async function enviarMensaje(config: ConfigCliente, usuarioId: string, texto: string) {
+  // TODO 1: obtener o crear la conversación para (config.id, usuarioId)
+  //         usar obtenerOCrearConversacion()
+  const conversacionId = await obtenerOCrearConversacion(config.id, usuarioId)
+
+  // TODO 2: traer el historial actual de esa conversación
+  //         usar obtenerHistorial()
+  const historial = await obtenerHistorial(conversacionId)
+
+  // TODO 3: guardar el mensaje del usuario
+  //         usar guardarMensaje() con rol 'user'
+  await guardarMensaje(conversacionId, 'user', texto)
+
+  // TODO 4: llamar a generarRespuesta() con config, historial y texto
+  //         luego guardar la respuesta con rol 'assistant'
+  //         y retornarla
+  const respuesta = await generarRespuesta(config, historial, texto)
+  await guardarMensaje(conversacionId, 'assistant', respuesta)
+
+  return respuesta
 }
 
-// TODO 2: Historial vacío — primera vez que el usuario habla
-const historial: Mensaje[] = []
-
-// TODO 3: Llamar a generarRespuesta y mostrar el resultado
 async function main() {
-  console.log('Enviando mensaje a Gemini...\n')
+  // Cargar el cliente desde la DB
+  const cliente = await prisma.cliente.findFirst({
+    where: { nombre: 'Restaurante Don Pepito' },
+  })
 
-  const respuesta = await generarRespuesta(
-    configRestaurante,
-    historial,
-    '¿Qué días abren y hasta qué hora?'
-  )
+  if (!cliente) {
+    throw new Error('Corré seed.ts primero')
+  }
 
-  console.log('Respuesta del bot:')
-  console.log(respuesta)
+  const config: ConfigCliente = {
+    id: cliente.id,
+    nombre: cliente.nombre,
+    arquetipo: Arquetipo.FAQ,
+    systemPrompt: cliente.systemPrompt,
+    modelo: cliente.modelo,
+    temperatura: cliente.temperatura,
+    maxTokens: cliente.maxTokens,
+    maxHistorial: cliente.maxHistorial,
+    canales: [Canal.WEB],
+    activo: cliente.activo,
+    createdAt: cliente.creadoEn,
+  }
+
+  const usuarioId = 'usuario-test-1'
+
+  // Mensaje 1
+  console.log('👤 Usuario: ¿Qué días abren?')
+  const resp1 = await enviarMensaje(config, usuarioId, '¿Qué días abren?')
+  console.log('🤖 Bot:', resp1)
+
+  // Mensaje 2 — debe recordar el contexto
+  console.log('\n👤 Usuario: ¿Y el domingo?')
+  const resp2 = await enviarMensaje(config, usuarioId, '¿Y el domingo?')
+  console.log('🤖 Bot:', resp2)
 }
 
-main().catch(console.error)
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect())

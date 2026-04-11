@@ -18,3 +18,11 @@ user                  assistant
 La implicación para tu código:
 
 Cuando implementes historial.service.ts en la Sesión 2, obtenerHistorial() tiene que devolver los mensajes en orden cronológico ascendente (más viejo primero) y el primero siempre debe ser user. Si la DB devuelve orden descendente o hay un mensaje corrupto, tu bot explota silenciosamente o tira 400.
+
+Si obtenerHistorial devolviera los mensajes en orden DESC (más nuevo primero), ¿qué le pasaría al bot en la segunda respuesta?
+
+Gemini recibe el historial con el último mensaje primero. Eso significa que la conversación le llega "al revés" — la conclusión antes que la pregunta. La IA intenta seguir coherentemente desde ahí y produce una respuesta sin sentido o contradictoria, porque interpreta que el estado actual de la conversación es el mensaje más reciente del array (que en realidad es el más viejo).
+
+El error de rol que mencionás sí puede pasar en un caso específico: si el historial tiene un número impar de mensajes y el primero del array (que con DESC sería el más reciente, del assistant) queda en posición user, Gemini devuelve un error porque espera que el historial arranque con user, no con assistant. Pero eso es un efecto secundario, no la causa raíz.
+
+La causa raíz es: el modelo pierde el hilo narrativo. No sabe qué fue preguntado antes de qué. El contexto acumulado deja de tener sentido semántico.

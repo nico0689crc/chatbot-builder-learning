@@ -1,0 +1,75 @@
+// Fase 1 — Schema de Prisma
+// Tres modelos: Cliente, Conversacion, Mensaje
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// CLIENTE
+// El negocio que contrata el bot.
+// Toda la configuración de la IA vive acá.
+// ─────────────────────────────────────────────
+
+model Cliente {
+  id           String   @id @default(cuid())
+  nombre       String
+
+  // Parámetros de IA — los que usa generarRespuesta()
+  systemPrompt String
+  modelo       String   @default("gemini-2.5-flash")
+  temperatura  Float    @default(0.7)
+  maxTokens    Int      @default(1024)
+  maxHistorial Int      @default(10)
+
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now())
+
+  // Un cliente tiene muchas conversaciones
+  conversaciones Conversacion[]
+}
+
+// ─────────────────────────────────────────────
+// CONVERSACION
+// Una sesión entre un usuario y el bot de un cliente.
+// La clave multi-tenant es (clienteId + usuarioId).
+// ─────────────────────────────────────────────
+
+model Conversacion {
+  id        String   @id @default(cuid())
+  creadoEn  DateTime @default(now())
+
+  // TODO: agregar campo usuarioId (String)
+  usuarioId String
+  // Relación con Cliente
+  clienteId String
+  cliente   Cliente  @relation(fields: [clienteId], references: [id])
+
+  // Una conversación tiene muchos mensajes
+  mensajes  Mensaje[]
+}
+
+// ─────────────────────────────────────────────
+// MENSAJE
+// Un turno dentro de una conversación.
+// rol puede ser 'user' o 'assistant'.
+// ─────────────────────────────────────────────
+
+model Mensaje {
+  id        String   @id @default(cuid())
+  creadoEn  DateTime @default(now())
+
+  // TODO: agregar campo rol (String) — valores: 'user' | 'assistant'
+  // TODO: agregar campo contenido (String)
+  rol       String
+  contenido String
+
+  // Relación con Conversacion
+  conversacionId String
+  conversacion   Conversacion @relation(fields: [conversacionId], references: [id])
+}
