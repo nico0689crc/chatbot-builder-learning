@@ -57,7 +57,7 @@ chatRouter.post('/', async (req: Request, res: Response) => {
     // TODO: guardarMensaje (user)
     await guardarMensaje(conversacionId, 'user', texto)
     // TODO: generarRespuesta
-    const respuesta = await generarRespuesta(config, historial, texto)
+    const respuesta = await generarRespuesta(config, historial, texto, usuarioId)
     // TODO: guardarMensaje (assistant)
     await guardarMensaje(conversacionId, 'assistant', respuesta)
     // TODO: res.json({ respuesta })

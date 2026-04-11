@@ -32,6 +32,7 @@ model Cliente {
 
   // Un cliente tiene muchas conversaciones
   conversaciones Conversacion[]
+  turnos         Turno[]
 }
 
 // ─────────────────────────────────────────────
@@ -72,4 +73,24 @@ model Mensaje {
   // Relación con Conversacion
   conversacionId String
   conversacion   Conversacion @relation(fields: [conversacionId], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// TURNO
+// Los turnos que maneja el bot.
+// ─────────────────────────────────────────────
+
+model Turno {
+  id        String   @id @default(cuid()) // ID interno del turno
+  creadoEn  DateTime @default(now())
+
+  // Datos del turno
+  usuarioId String
+  fecha     String
+  hora      String
+  estado    String   @default("confirmado")
+
+  // Relación con el cliente
+  clienteId String
+  cliente   Cliente  @relation(fields: [clienteId], references: [id])
 }

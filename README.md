@@ -148,13 +148,13 @@ chatbot-builder-learning/
 
 ## Mapa de fases
 
-| Fase | Qué construís | Sesiones | Arquetipos desbloqueados |
-|------|--------------|----------|--------------------------|
-| 1 | Bot FAQ con TypeScript | 3 | FAQ & Info |
-| 2 | Agente con tools (LangChain) | 3 | + Turnos, Ventas |
-| 3 | Flujos con LangGraph | 3 | + Soporte, Interno |
-| 4 | Builder multi-tenant | 4 | + Transaccional |
-| 5 | Capacidades avanzadas | Continuo | RAG, Streaming, Panel cliente |
+| Fase | Qué construís | Sesiones | Arquetipos desbloqueados | Estado |
+|------|--------------|----------|--------------------------|--------|
+| 1 | Bot FAQ con TypeScript | 3 | FAQ & Info | ✅ Completa |
+| 2 | Agente con tools (LangChain) | 3 | + Turnos, Ventas | ✅ Completa |
+| 3 | Flujos con LangGraph | 3 | + Soporte, Interno | ⬜ Pendiente |
+| 4 | Builder multi-tenant | 4 | + Transaccional | ⬜ Pendiente |
+| 5 | Capacidades avanzadas | Continuo | RAG, Streaming, Panel cliente | ⬜ Pendiente |
 
 **Estrategia:** Terminás Fase 1 → conseguís primer cliente → aprendés Fase 2 con caso real.
 
