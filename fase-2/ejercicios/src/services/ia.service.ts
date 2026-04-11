@@ -1,25 +1,19 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
+import { createToolCallingAgent, AgentExecutor } from 'langchain/agents'
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts'
 import { HumanMessage, AIMessage } from '@langchain/core/messages'
-import { StringOutputParser } from '@langchain/core/output_parsers'
 import type { ConfigCliente, Mensaje } from '@shared/types/chatbot.types'
-
-// TODO 4.2a: crear el modelo con config.modelo y config.temperatura
-//   Pista: new ChatGoogleGenerativeAI({ model: ..., temperature: ... })
-//   Problema: config llega por función, no es global — ¿dónde lo creás?
-// const model = ???
+import { verificarDisponibilidad, crearTurno, cancelarTurno } from './tools/turnos.tools'
 
 // TODO 4.2b-d: armar el template con 3 partes
-//   ["system", el system prompt dinámico],
-//   MessagesPlaceholder para el historial,
-//   ["human", el mensaje nuevo]
-// const prompt = ChatPromptTemplate.fromMessages([
-//   ???
-// ])
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "{systemPrompt}"],
+  new MessagesPlaceholder("historial"),
+  ["human", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad")
+])
 
-// TODO 4.2e: chain con LCEL
-//   prompt → model → StringOutputParser
-// const chain = ???
+const tools = [verificarDisponibilidad, crearTurno, cancelarTurno]
 
 export async function generarRespuesta(
   config: ConfigCliente,
@@ -32,34 +26,27 @@ export async function generarRespuesta(
     temperature: config.temperatura,
   })
 
-  // TODO 4.2b-d: armar el template con 3 partes
-  //   ["system", el system prompt dinámico],
-  //   MessagesPlaceholder para el historial,
-  //   ["human", el mensaje nuevo]
-  const prompt = ChatPromptTemplate.fromMessages([
-    ["system", "{systemPrompt}"],
-    new MessagesPlaceholder("historial"),
-    ["human", "{input}"],
-  ])
-
-  // TODO 4.2e: chain con LCEL
-  const chain = prompt.pipe(model).pipe(new StringOutputParser())
-
-  // TODO 4.2f: convertir historial de Mensaje[] a HumanMessage/AIMessage[]
-  //   Pista: m.rol === 'user' → new HumanMessage(m.contenido)
-  //          m.rol === 'assistant' → new AIMessage(m.contenido)
-  const mensajesHistorial = historial.map(m => {
-    if (m.rol === 'user') {
-      return new HumanMessage(m.contenido)
-    }
-    return new AIMessage(m.contenido)
+  // TODO 5.2a: crear el agente con createToolCallingAgent
+  const agent = createToolCallingAgent({
+    llm: model,
+    tools,
+    prompt
   })
 
-  // TODO 4.2g: invocar la chain con los valores para los slots del template
-  //   Pista: chain.invoke({ systemPrompt: ..., historial: ..., input: ... })
-  return chain.invoke({
+  // TODO 5.2b: crear el executor con AgentExecutor
+  const executor = new AgentExecutor({ agent, tools })
+
+  const mensajesHistorial = historial.map((h) => h.rol === 'user' ?
+    new HumanMessage(h.contenido) :
+    new AIMessage(h.contenido)
+  )
+
+  // TODO 5.2c: invocar el executor — ojo, devuelve { output: string }, no string directo
+  const resultado = await executor.invoke({
     systemPrompt: config.systemPrompt,
     historial: mensajesHistorial,
-    input: mensajeNuevo,
+    input: mensajeNuevo
   })
+
+  return resultado.output
 }
