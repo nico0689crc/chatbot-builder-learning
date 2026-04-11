@@ -1,0 +1,9 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "buildCommand": "cd fase-1/ejercicios && npm install && npx prisma generate && npm run build"
+  },
+  "deploy": {
+    "startCommand": "cd fase-1/ejercicios && npm start"
+  }
+}

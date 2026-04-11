@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "test:ia": "ts-node -r tsconfig-paths/register src/scripts/test-ia.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node -r tsconfig-paths/register dist/fase-1/ejercicios/src/index.js"
   },
   "dependencies": {
