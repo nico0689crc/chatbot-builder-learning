@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno — NUNCA subir claves
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Prisma
+prisma/migrations/dev/
