@@ -136,7 +136,18 @@ chatbot-builder-learning/
 ├── fase-3/                            ← Flujos complejos (LangGraph)
 │   ├── conceptos/
 │   └── PLAN.md
-├── fase-4/                            ← Builder multi-tenant completo
+├── fase-4/                            ← Builder multi-tenant completo ✅
+│   ├── app/                           ← Proyecto NestJS (producto real)
+│   │   ├── src/
+│   │   │   ├── admin/                 ← CRUD clientes, tools, métricas
+│   │   │   ├── canales/               ← POST /chat
+│   │   │   ├── clientes/              ← ClientesService
+│   │   │   ├── ia/                    ← graph builder + tool executor
+│   │   │   ├── metricas/              ← 6 KPIs del reporte mensual
+│   │   │   ├── prisma/                ← PrismaService @Global
+│   │   │   └── common/                ← TenantGuard, @Public(), TenantRequest
+│   │   ├── prisma/schema.prisma       ← Cliente, Conversacion, Tool, MetricasMes
+│   │   └── public/widget.js           ← Widget embebible
 │   ├── conceptos/
 │   └── PLAN.md
 └── fase-5/                            ← Capacidades avanzadas (bajo demanda)
@@ -152,11 +163,13 @@ chatbot-builder-learning/
 |------|--------------|----------|--------------------------|--------|
 | 1 | Bot FAQ con TypeScript | 3 | FAQ & Info | ✅ Completa |
 | 2 | Agente con tools (LangChain) | 3 | + Turnos, Ventas | ✅ Completa |
-| 3 | Flujos con LangGraph | 3 | + Soporte, Interno | ⬜ Pendiente |
-| 4 | Builder multi-tenant | 4 | + Transaccional | ⬜ Pendiente |
+| 3 | Flujos con LangGraph | 3 | + Soporte, Interno | ✅ Completa |
+| 4 | Builder multi-tenant | 4 | + Transaccional | ✅ Completa |
 | 5 | Capacidades avanzadas | Continuo | RAG, Streaming, Panel cliente | ⬜ Pendiente |
 
 **Estrategia:** Terminás Fase 1 → conseguís primer cliente → aprendés Fase 2 con caso real.
+
+**Estado actual:** Fase 4 completa. El builder está operativo — podés dar de alta clientes, configurar tools desde la DB, el widget funciona y las métricas se registran automáticamente.
 
 ---
 
@@ -187,7 +200,7 @@ Tengo funcionando: [descripción breve]
 | Base de datos | PostgreSQL |
 | Caché | Redis |
 | Framework IA | LangChain JS + LangGraph JS |
-| Modelo IA | Claude (Anthropic) |
+| Modelo IA | Gemini (Google) |
 | Deploy | Railway |
 
 Ver [`shared/referencias/stack.md`](shared/referencias/stack.md) para justificación completa.

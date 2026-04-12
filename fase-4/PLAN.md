@@ -90,11 +90,11 @@ solo del tipo de conector?
 **Entregable:** Alta de cliente nuevo en menos de 30 minutos de principio a fin.
 
 ### Ejercicios
-- [ ] **12.1** API de administración: CRUD de clientes
-- [ ] **12.2** Endpoint para habilitar/configurar tools por cliente
-- [ ] **12.3** Endpoint de métricas básicas por cliente
-- [ ] **12.4** Widget embebible — snippet JS con `data-client-id`
-- [ ] **12.5** Prueba end-to-end: crear cliente → configurar → widget en HTML → chatear
+- [x] **12.1** API de administración: CRUD de clientes
+- [x] **12.2** Endpoint para habilitar/configurar tools por cliente
+- [x] **12.3** Endpoint de métricas básicas por cliente
+- [x] **12.4** Widget embebible — snippet JS con `data-client-id`
+- [x] **12.5** Prueba end-to-end: crear cliente → configurar → widget en HTML → chatear
 
 ### Prueba de aceptación final
 ```bash
@@ -122,10 +122,10 @@ POST /admin/clientes/:id/tools
 Ver KPIs en [`docs/guia-diseno-chatbots.md`](../docs/guia-diseno-chatbots.md#kpis) — sección 5, Etapa 5.
 
 ### Ejercicios
-- [ ] **13.1** Tabla `MetricasMes` en Prisma
-- [ ] **13.2** Job que calcula métricas al cerrar cada conversación
-- [ ] **13.3** Endpoint `GET /admin/clientes/:id/metricas?periodo=2025-06`
-- [ ] **13.4** Respuesta con los 6 KPIs del reporte mensual
+- [x] **13.1** Tabla `MetricasMes` en Prisma
+- [x] **13.2** Job que calcula métricas al cerrar cada conversación
+- [x] **13.3** Endpoint `GET /admin/clientes/:id/metricas?periodo=2025-06`
+- [x] **13.4** Respuesta con los 6 KPIs del reporte mensual
 
 ---
 
@@ -140,3 +140,52 @@ Ver KPIs en [`docs/guia-diseno-chatbots.md`](../docs/guia-diseno-chatbots.md#kpi
 - [x] Endpoint de métricas con los 6 KPIs
 
 **Con esta fase tenés un producto propio. Builder v1 completo.**
+
+---
+
+## Endpoints disponibles (Fase 4 completa)
+
+### Chat (requiere `x-client-id` header)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/chat` | Enviar mensaje al bot del cliente |
+
+### Admin (público — proteger con auth en producción)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/admin/clientes` | Crear cliente nuevo |
+| `GET`  | `/admin/clientes` | Listar todos los clientes |
+| `GET`  | `/admin/clientes/:id` | Detalle de un cliente |
+| `POST` | `/admin/clientes/:id/tools` | Agregar tool al cliente |
+| `GET`  | `/admin/clientes/:id/tools` | Listar tools del cliente |
+| `POST` | `/admin/clientes/:id/tools/:toolId/parametros` | Agregar parámetro a una tool |
+| `GET`  | `/admin/clientes/:id/metricas?periodo=2026-04` | Reporte mensual con 6 KPIs |
+
+### Widget
+| Recurso | Ruta | Descripción |
+|---------|------|-------------|
+| `GET` | `/public/widget.js` | Widget embebible |
+| `GET` | `/public/test.html` | HTML de prueba del widget |
+
+## Arquitectura final
+
+```
+src/
+  app.module.ts          TenantGuard global + ServeStaticModule
+  prisma/                PrismaService @Global
+  clientes/              CRUD básico de clientes
+  ia/                    IAService (graph builder) + ToolExecutorService
+  canales/               POST /chat — persiste conversación y registra métricas
+  admin/                 Panel admin — clientes, tools, parámetros, métricas
+  metricas/              MetricasService — 6 KPIs, registro por cierre
+  common/
+    guards/              TenantGuard
+    decorators/          @Public()
+    types/               TenantRequest
+```
+
+## Deploy en Railway
+
+- **Build command:** `npm run build`
+- **Start command:** `npm run start:prod`
+- `start:prod` ejecuta `prisma migrate deploy` antes de levantar el servidor
