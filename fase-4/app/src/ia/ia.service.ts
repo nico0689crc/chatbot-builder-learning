@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { StateGraph, END, MessagesAnnotation, Annotation } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { SystemMessage } from '@langchain/core/messages';
+import { AIMessage, SystemMessage } from '@langchain/core/messages';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
-
-type Arquetipo = 'faq' | 'soporte';
+import { ToolExecutorService } from './tool-executor.service';
 
 const GraphState = Annotation.Root({
   ...MessagesAnnotation.spec,
@@ -12,10 +12,10 @@ const GraphState = Annotation.Root({
 type State = typeof GraphState.State;
 
 @Injectable()
-export class IAService {
+export class IAService implements OnModuleInit {
   private checkpointer: PostgresSaver;
 
-  constructor() {
+  constructor(private toolExecutor: ToolExecutorService) {
     this.checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!);
   }
 
@@ -23,11 +23,24 @@ export class IAService {
     await this.checkpointer.setup();
   }
 
-  buildGraph(arquetipo: Arquetipo, systemPrompt: string) {
+  /**
+   * Construye el grafo correcto según el arquetipo del cliente.
+   * Si el cliente tiene tools en la DB, las carga y las inyecta en el grafo.
+   */
+  async buildGraph(arquetipo: string, systemPrompt: string, clienteId: string) {
+    const tools = await this.toolExecutor.loadToolsForCliente(clienteId);
+
     switch (arquetipo) {
-      case 'faq':     return this.buildFaqGraph(systemPrompt);
-      case 'soporte': return this.buildSoporteGraph(systemPrompt);
-      default:        throw new Error(`Arquetipo desconocido: ${arquetipo}`);
+      case 'faq':
+        return this.buildFaqGraph(systemPrompt);
+      case 'soporte':
+      case 'turnos':
+      case 'ventas':
+        return tools.length > 0
+          ? this.buildGraphWithTools(systemPrompt, tools)
+          : this.buildFaqGraph(systemPrompt);
+      default:
+        return this.buildFaqGraph(systemPrompt);
     }
   }
 
@@ -49,13 +62,29 @@ export class IAService {
       .compile({ checkpointer: this.checkpointer });
   }
 
-  private buildSoporteGraph(systemPrompt: string) {
-    // En Sesión 11 se integran tools desde la DB.
-    // Por ahora mismo grafo que FAQ pero con el system prompt de soporte.
-    return this.buildFaqGraph(systemPrompt);
-  }
+  private buildGraphWithTools(systemPrompt: string, tools: any[]) {
+    const model = new ChatGoogleGenerativeAI({ model: 'gemini-2.5-flash' }).bindTools(tools);
+    const toolNode = new ToolNode(tools);
 
-  getCheckpointer() {
-    return this.checkpointer;
+    const callModel = async (state: State): Promise<Partial<State>> => {
+      const result = await model.invoke([
+        new SystemMessage(systemPrompt),
+        ...state.messages,
+      ]);
+      return { messages: [result] };
+    };
+
+    const routeAfterModel = (state: State): 'tools' | '__end__' => {
+      const last = state.messages[state.messages.length - 1] as AIMessage;
+      return (last.tool_calls?.length ?? 0) > 0 ? 'tools' : '__end__';
+    };
+
+    return new StateGraph(GraphState)
+      .addNode('model', callModel)
+      .addNode('tools', toolNode)
+      .addEdge('__start__', 'model')
+      .addConditionalEdges('model', routeAfterModel, { tools: 'tools', __end__: END })
+      .addEdge('tools', 'model')
+      .compile({ checkpointer: this.checkpointer });
   }
 }

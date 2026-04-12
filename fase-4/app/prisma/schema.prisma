@@ -45,3 +45,43 @@ model Mensaje {
 
   conversacion Conversacion @relation(fields: [conversacionId], references: [id])
 }
+
+// ---------------------------------------------------------------------------
+// Sesión 11 — Tools y conectores
+// ---------------------------------------------------------------------------
+
+model Tool {
+  id          String   @id @default(cuid())
+  clienteId   String
+  nombre      String   // nombre de la función que el LLM puede llamar
+  descripcion String
+  activa      Boolean  @default(true)
+  creadoEn    DateTime @default(now())
+
+  conector  Conector?
+  parametros Parametro[]
+
+  @@unique([clienteId, nombre])
+}
+
+model Conector {
+  id       String @id @default(cuid())
+  toolId   String @unique
+  tipo     String // "API_REST" | "GOOGLE_SHEETS"
+  url      String // endpoint o spreadsheet ID
+  metodo   String @default("GET") // GET | POST | PUT
+  headers  Json   @default("{}")  // headers HTTP adicionales
+
+  tool Tool @relation(fields: [toolId], references: [id])
+}
+
+model Parametro {
+  id          String  @id @default(cuid())
+  toolId      String
+  nombre      String
+  tipo        String  // "string" | "number" | "boolean"
+  descripcion String
+  requerido   Boolean @default(true)
+
+  tool Tool @relation(fields: [toolId], references: [id])
+}

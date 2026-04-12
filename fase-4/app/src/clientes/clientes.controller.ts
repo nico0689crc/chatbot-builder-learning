@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { ClientesService } from './clientes.service';
+import { Public } from '../common/decorators/public.decorator';
 
+@Public()
 @Controller('clientes')
 export class ClientesController {
   constructor(private clientesService: ClientesService) {}

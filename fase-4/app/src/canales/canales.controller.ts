@@ -1,27 +1,28 @@
-import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
 import { IAService } from '../ia/ia.service';
-import { ClientesService } from '../clientes/clientes.service';
 import { HumanMessage } from '@langchain/core/messages';
 
 @Controller('chat')
 export class CanalesController {
-  constructor(
-    private iaService: IAService,
-    private clientesService: ClientesService,
-  ) {}
+  constructor(private iaService: IAService) {}
 
   @Post()
   async chat(
-    @Headers('x-client-id') clienteId: string,
+    @Req() request: any,
     @Body() body: { mensaje: string; sessionId: string },
   ) {
-    if (!clienteId) throw new BadRequestException('Header x-client-id requerido');
-    if (!body.mensaje || !body.sessionId) throw new BadRequestException('mensaje y sessionId requeridos');
+    if (!body.mensaje || !body.sessionId) {
+      throw new BadRequestException('mensaje y sessionId requeridos');
+    }
 
-    const cliente = await this.clientesService.findById(clienteId);
-    const grafo = this.iaService.buildGraph(cliente.arquetipo as any, cliente.systemPrompt);
+    const cliente = request.cliente;
+    const grafo = await this.iaService.buildGraph(
+      cliente.arquetipo,
+      cliente.systemPrompt,
+      cliente.id,
+    );
 
-    const config = { configurable: { thread_id: `${clienteId}-${body.sessionId}` } };
+    const config = { configurable: { thread_id: `${cliente.id}-${body.sessionId}` } };
     const result = await grafo.invoke(
       { messages: [new HumanMessage(body.mensaje)] },
       config,
