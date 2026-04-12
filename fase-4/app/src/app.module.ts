@@ -8,8 +8,6 @@ import { TenantGuard } from './common/guards/tenant.guard';
 
 @Module({
   imports: [PrismaModule, ClientesModule, IAModule, CanalesModule],
-  providers: [
-    { provide: APP_GUARD, useClass: TenantGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: TenantGuard }],
 })
 export class AppModule {}

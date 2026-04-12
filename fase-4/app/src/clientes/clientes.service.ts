@@ -15,7 +15,11 @@ export class ClientesService {
     return this.prisma.cliente.findMany({ where: { activo: true } });
   }
 
-  async create(data: { nombre: string; arquetipo: string; systemPrompt: string }) {
+  async create(data: {
+    nombre: string;
+    arquetipo: string;
+    systemPrompt: string;
+  }) {
     return this.prisma.cliente.create({ data });
   }
 }

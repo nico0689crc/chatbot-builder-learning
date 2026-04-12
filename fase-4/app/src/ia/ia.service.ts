@@ -1,5 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { StateGraph, END, MessagesAnnotation, Annotation } from '@langchain/langgraph';
+import {
+  StateGraph,
+  END,
+  MessagesAnnotation,
+  Annotation,
+} from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { AIMessage, SystemMessage } from '@langchain/core/messages';
@@ -63,7 +68,9 @@ export class IAService implements OnModuleInit {
   }
 
   private buildGraphWithTools(systemPrompt: string, tools: any[]) {
-    const model = new ChatGoogleGenerativeAI({ model: 'gemini-2.5-flash' }).bindTools(tools);
+    const model = new ChatGoogleGenerativeAI({
+      model: 'gemini-2.5-flash',
+    }).bindTools(tools);
     const toolNode = new ToolNode(tools);
 
     const callModel = async (state: State): Promise<Partial<State>> => {
@@ -83,7 +90,10 @@ export class IAService implements OnModuleInit {
       .addNode('model', callModel)
       .addNode('tools', toolNode)
       .addEdge('__start__', 'model')
-      .addConditionalEdges('model', routeAfterModel, { tools: 'tools', __end__: END })
+      .addConditionalEdges('model', routeAfterModel, {
+        tools: 'tools',
+        __end__: END,
+      })
       .addEdge('tools', 'model')
       .compile({ checkpointer: this.checkpointer });
   }

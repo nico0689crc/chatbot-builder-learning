@@ -1,5 +1,12 @@
-import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { IAService } from '../ia/ia.service';
+import type { TenantRequest } from '../common/types/tenant-request.interface';
 import { HumanMessage } from '@langchain/core/messages';
 
 @Controller('chat')
@@ -8,7 +15,7 @@ export class CanalesController {
 
   @Post()
   async chat(
-    @Req() request: any,
+    @Req() request: TenantRequest,
     @Body() body: { mensaje: string; sessionId: string },
   ) {
     if (!body.mensaje || !body.sessionId) {
@@ -22,7 +29,9 @@ export class CanalesController {
       cliente.id,
     );
 
-    const config = { configurable: { thread_id: `${cliente.id}-${body.sessionId}` } };
+    const config = {
+      configurable: { thread_id: `${cliente.id}-${body.sessionId}` },
+    };
     const result = await grafo.invoke(
       { messages: [new HumanMessage(body.mensaje)] },
       config,

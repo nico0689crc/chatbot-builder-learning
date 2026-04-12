@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 
+type ConectorResult = Record<string, unknown> | { error: string };
+
 @Injectable()
 export class ToolExecutorService {
   constructor(private prisma: PrismaService) {}
@@ -34,16 +36,29 @@ export class ToolExecutorService {
     });
   }
 
-  private buildZodSchema(parametros: { nombre: string; tipo: string; descripcion: string; requerido: boolean }[]) {
+  private buildZodSchema(
+    parametros: {
+      nombre: string;
+      tipo: string;
+      descripcion: string;
+      requerido: boolean;
+    }[],
+  ) {
     const shape: Record<string, z.ZodTypeAny> = {};
 
     for (const p of parametros) {
       let field: z.ZodTypeAny;
 
       switch (p.tipo) {
-        case 'number':  field = z.number();  break;
-        case 'boolean': field = z.boolean(); break;
-        default:        field = z.string();  break;
+        case 'number':
+          field = z.number();
+          break;
+        case 'boolean':
+          field = z.boolean();
+          break;
+        default:
+          field = z.string();
+          break;
       }
 
       field = field.describe(p.descripcion);
@@ -56,7 +71,7 @@ export class ToolExecutorService {
   private async executeConector(
     conector: { tipo: string; url: string; metodo: string; headers: unknown },
     args: Record<string, unknown>,
-  ) {
+  ): Promise<ConectorResult> {
     switch (conector.tipo) {
       case 'API_REST':
         return this.executeApiRest(conector, args);
@@ -70,7 +85,7 @@ export class ToolExecutorService {
   private async executeApiRest(
     conector: { url: string; metodo: string; headers: unknown },
     args: Record<string, unknown>,
-  ) {
+  ): Promise<ConectorResult> {
     const headers = {
       'Content-Type': 'application/json',
       ...(conector.headers as object),
@@ -98,13 +113,13 @@ export class ToolExecutorService {
       return { error: `HTTP ${response.status}: ${response.statusText}` };
     }
 
-    return response.json();
+    return response.json() as Promise<ConectorResult>;
   }
 
-  private async executeGoogleSheets(
+  private executeGoogleSheets(
     conector: { url: string },
     args: Record<string, unknown>,
-  ) {
+  ): ConectorResult {
     // url = spreadsheetId
     // En una implementación real usaría googleapis.
     // Por ahora retorna un placeholder para no bloquear el flujo.

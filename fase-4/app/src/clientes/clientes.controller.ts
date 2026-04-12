@@ -18,7 +18,9 @@ export class ClientesController {
   }
 
   @Post()
-  create(@Body() body: { nombre: string; arquetipo: string; systemPrompt: string }) {
+  create(
+    @Body() body: { nombre: string; arquetipo: string; systemPrompt: string },
+  ) {
     return this.clientesService.create(body);
   }
 }
