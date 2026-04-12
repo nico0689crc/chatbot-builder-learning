@@ -99,11 +99,11 @@ y a uno de Soporte usando el graph builder.
 ```
 
 ### Ejercicios
-- [ ] **9.1** `src/services/graph-builder.service.ts` con switch por arquetipo
-- [ ] **9.2** `construirGrafoFAQ` — grafo simple de dos nodos
-- [ ] **9.3** `construirGrafoSoporte` — grafo con bifurcaciones
-- [ ] **9.4** Actualizar el endpoint `/chat` para usar el graph builder
-- [ ] **9.5** Prueba: mismo endpoint, cliente FAQ vs cliente Soporte
+- [x] **9.1** `src/services/graph-builder.service.ts` con switch por arquetipo
+- [x] **9.2** `construirGrafoFAQ` — grafo simple de dos nodos
+- [x] **9.3** `construirGrafoSoporte` — grafo con bifurcaciones
+- [x] **9.4** Actualizar el endpoint `/chat` para usar el graph builder
+- [x] **9.5** Prueba: mismo endpoint, cliente FAQ vs cliente Soporte
 
 ---
 
@@ -113,7 +113,7 @@ y a uno de Soporte usando el graph builder.
 - [x] Bot de soporte detectando cuándo escalar correctamente
 - [x] Checkpointer guardando estado en PostgreSQL
 - [ ] Human-in-the-loop pausando el grafo en acciones críticas
-- [ ] Graph builder generando grafos distintos para FAQ y Soporte
-- [ ] Mismo endpoint sirve a ambos arquetipos correctamente
+- [x] Graph builder generando grafos distintos para FAQ y Soporte
+- [x] Mismo endpoint sirve a ambos arquetipos correctamente
 
 **Con esta fase podés ofrecer arquetipos Soporte & Postventa y Asistente Interno.**
