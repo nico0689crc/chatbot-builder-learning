@@ -21,6 +21,7 @@ model Cliente {
   creadoEn     DateTime @default(now())
 
   conversaciones Conversacion[]
+  metricas       MetricasMes[]
 }
 
 model Conversacion {
@@ -44,6 +45,25 @@ model Mensaje {
   creadoEn       DateTime @default(now())
 
   conversacion Conversacion @relation(fields: [conversacionId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Sesión 13 — Métricas mensuales
+// ---------------------------------------------------------------------------
+
+model MetricasMes {
+  id                      String   @id @default(cuid())
+  clienteId               String
+  periodo                 String   // "2026-04" — año-mes
+  conversaciones          Int      @default(0)
+  mensajes                Int      @default(0)
+  conversacionesEscaladas Int      @default(0)
+  duracionPromedioMin     Float    @default(0)
+  actualizadoEn           DateTime @updatedAt
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@unique([clienteId, periodo])
 }
 
 // ---------------------------------------------------------------------------

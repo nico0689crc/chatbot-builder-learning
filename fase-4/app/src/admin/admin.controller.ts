@@ -1,12 +1,16 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { AdminService } from './admin.service';
+import { MetricasService } from '../metricas/metricas.service';
 import { CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
 
 @Public()
 @Controller('admin')
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private metricasService: MetricasService,
+  ) {}
 
   // --- Clientes ---
 
@@ -48,7 +52,16 @@ export class AdminController {
   // --- Métricas ---
 
   @Get('clientes/:id/metricas')
-  metricas(@Param('id') clienteId: string) {
-    return this.adminService.metricas(clienteId);
+  metricas(
+    @Param('id') clienteId: string,
+    @Query('periodo') periodo?: string,
+  ) {
+    const p = periodo ?? this.periodoActual();
+    return this.metricasService.obtenerReporte(clienteId, p);
+  }
+
+  private periodoActual(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 }

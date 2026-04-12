@@ -131,12 +131,12 @@ Ver KPIs en [`docs/guia-diseno-chatbots.md`](../docs/guia-diseno-chatbots.md#kpi
 
 ## Checklist de la Fase 4
 
-- [ ] NestJS con módulos por dominio
-- [ ] TenantGuard aplicado globalmente
-- [ ] Tool executor resolviendo API_REST y Google Sheets
-- [ ] Schema con tablas Tool, Conector, Parametro
-- [ ] Widget embebible funcionando en HTML de prueba
-- [ ] Alta de cliente nuevo en menos de 30 minutos
-- [ ] Endpoint de métricas con los 6 KPIs
+- [x] NestJS con módulos por dominio
+- [x] TenantGuard aplicado globalmente
+- [x] Tool executor resolviendo API_REST y Google Sheets
+- [x] Schema con tablas Tool, Conector, Parametro
+- [x] Widget embebible funcionando en HTML de prueba
+- [x] Alta de cliente nuevo en menos de 30 minutos
+- [x] Endpoint de métricas con los 6 KPIs
 
 **Con esta fase tenés un producto propio. Builder v1 completo.**
