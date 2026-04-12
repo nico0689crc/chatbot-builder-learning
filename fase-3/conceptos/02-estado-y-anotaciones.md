@@ -117,4 +117,29 @@ async function myNode(state: any) { ... }
 
 ## Extensión del estado entre sesiones
 
-En Sesión 8 vas a agregar al estado las claves necesarias para persistencia y human-in-the-loop. El estado puede crecer sin romper los nodos existentes porque cada nodo solo toca sus propias claves.
+El estado puede crecer sin romper los nodos existentes porque cada nodo solo toca sus propias claves.
+
+### Patrón: campo con reducer de reemplazo
+
+Para campos que guardan una decisión puntual (no acumulan como `messages`), usá un reducer que siempre reemplaza:
+
+```typescript
+const GraphState = Annotation.Root({
+  ...MessagesAnnotation.spec,
+  aprobacionOperador: Annotation<string | null>({
+    default: () => null,
+    reducer: (_, next) => next,  // siempre reemplaza, nunca acumula
+  }),
+});
+```
+
+Este patrón es necesario para **human-in-the-loop**: cuando `interrupt()` reanuda el nodo, el nodo devuelve `{ aprobacionOperador: "si" }`, y el reducer lo escribe en el estado. El router lo lee en el siguiente paso.
+
+Comparación de reducers:
+
+| Caso de uso | Reducer |
+|-------------|---------|
+| Historial de mensajes | `(current, next) => current.concat(next)` — acumula |
+| Decisión del operador | `(_, next) => next` — siempre reemplaza |
+| Contador de reintentos | `(current, next) => current + next` — suma |
+| Flag booleano | `(_, next) => next` — siempre reemplaza |

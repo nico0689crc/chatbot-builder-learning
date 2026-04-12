@@ -161,6 +161,41 @@ const graph = new StateGraph(GraphState)
   .compile();
 ```
 
+**Nodo de pausa (human-in-the-loop)** — pausa el grafo y espera aprobación externa:
+
+```typescript
+async function confirmarEscalado(state: State): Promise<Partial<State>> {
+  // interrupt() NO es un return — lanza una excepción interna que pausa el grafo
+  // Al reanudar con Command({ resume: valor }), retorna ese valor
+  const respuesta = interrupt("¿Confirmás el escalado a un humano? (si/no)");
+  return { aprobacionOperador: respuesta };
+}
+```
+
+Error frecuente al usar `interrupt()`:
+
+```typescript
+// ❌ Incorrecto — interrupt() devuelve string, no Partial<State>
+return interrupt("¿Confirmás?");
+// Error: Expected node to return an object or Command, received string
+
+// ✅ Correcto — guardar el retorno de interrupt() en el estado
+const respuesta = interrupt("¿Confirmás?");
+return { aprobacionOperador: respuesta };
+```
+
+Para reanudar el grafo pausado:
+
+```typescript
+// El operador aprueba
+await graph.invoke(new Command({ resume: "si" }), config);
+
+// El operador rechaza
+await graph.invoke(new Command({ resume: "no" }), config);
+```
+
+El nodo se re-ejecuta completo desde el principio. La diferencia: en la primera ejecución `interrupt()` pausa; en la segunda retorna el valor del `Command` inmediatamente.
+
 ---
 
 ## Errores comunes

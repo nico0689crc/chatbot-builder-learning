@@ -30,16 +30,31 @@ invoke(msg2, { thread_id: "user-123" })
 
 ## El thread_id
 
-El `thread_id` identifica una conversación. Es la clave de partición en el storage. En un builder multi-tenant típicamente es:
+El `thread_id` identifica una conversación. Es la clave de partición en el storage.
+
+### Patrón multi-tenant
+
+En un builder multi-tenant hay tres dimensiones: tenant, usuario y sesión. El `thread_id` debe contemplarlas todas:
 
 ```
-`${chatbotId}:${userId}`
+`${tenantId}-${userId}-${sessionId}`
 ```
+
+| Combinación | Problema |
+|-------------|----------|
+| Solo `tenantId` | Todos los usuarios del tenant comparten el mismo historial ❌ |
+| Solo `userId` | Riesgo de colisión entre usuarios de distintos tenants ❌ |
+| Solo `sessionId` | Dos tenants distintos podrían tener el mismo sessionId ❌ |
+| `tenantId-userId-sessionId` | Cada sesión de cada usuario de cada tenant es independiente ✅ |
 
 Se pasa como parte del config en cada invocación:
 
 ```typescript
-const config = { configurable: { thread_id: "chatbot-abc:user-123" } };
+const config = {
+  configurable: {
+    thread_id: `${tenantId}-${userId}-${sessionId}`
+  }
+};
 
 await graph.invoke({ messages: [new HumanMessage("Hola")] }, config);
 await graph.invoke({ messages: [new HumanMessage("¿Y el precio?")] }, config);
@@ -47,6 +62,15 @@ await graph.invoke({ messages: [new HumanMessage("¿Y el precio?")] }, config);
 ```
 
 Dos conversaciones distintas → dos `thread_id` distintos → estados completamente independientes.
+
+### El checkpointer es obligatorio para human-in-the-loop
+
+Sin checkpointer, el estado del grafo vive en memoria. Si el proceso termina entre el `interrupt()` y el `resume`, el estado se pierde y es imposible reanudar el grafo.
+
+Con `PostgresSaver`:
+1. Al llegar a `interrupt()`, LangGraph guarda el estado pausado en PostgreSQL
+2. El proceso puede terminar, reiniciarse, escalar horizontalmente — no importa
+3. Cuando el operador envía `Command({ resume: valor })` horas después, LangGraph carga el estado y continúa desde donde se pausó
 
 ## Checkpointers disponibles
 

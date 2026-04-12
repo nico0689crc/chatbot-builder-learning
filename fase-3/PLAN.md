@@ -112,7 +112,7 @@ y a uno de Soporte usando el graph builder.
 - [x] Primer grafo con tres nodos y aristas condicionales
 - [x] Bot de soporte detectando cuándo escalar correctamente
 - [x] Checkpointer guardando estado en PostgreSQL
-- [ ] Human-in-the-loop pausando el grafo en acciones críticas
+- [x] Human-in-the-loop pausando el grafo en acciones críticas
 - [x] Graph builder generando grafos distintos para FAQ y Soporte
 - [x] Mismo endpoint sirve a ambos arquetipos correctamente
 

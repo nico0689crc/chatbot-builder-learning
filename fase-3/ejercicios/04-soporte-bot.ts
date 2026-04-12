@@ -27,22 +27,6 @@ type Pedido = {
   estimadoEntrega: string;
 };
 
-type CasoDevolucion = {
-  casoId: string;
-  estado: string;
-  instrucciones: string;
-  pedidoId: string;
-  motivo: string;
-};
-
-type TicketSoporte = {
-  ticketId: string;
-  tiempoEspera: string;
-  mensaje: string;
-  razon: string;
-  pedidoId: string;
-};
-
 const pedidos: Pedido[] = [
   { id: "P-9981", estado: "en_camino", estimadoEntrega: "2022-01-01" },
   { id: "P-7742", estado: "entregado", estimadoEntrega: "2022-01-01" },
