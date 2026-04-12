@@ -46,11 +46,11 @@ Después explicame:
 ```
 
 ### Ejercicios
-- [ ] **7.1** Instalar `@langchain/langgraph`
-- [ ] **7.2** Definir `EstadoBot` con TypeScript
-- [ ] **7.3** Tres nodos: `evaluarIntencion`, `consultarHerramienta`, `prepararEscalado`
-- [ ] **7.4** Aristas condicionales según `requiereEscalado`
-- [ ] **7.5** Compilar y correr el grafo con un mensaje de prueba
+- [x] **7.1** Instalar `@langchain/langgraph`
+- [x] **7.2** Definir `EstadoBot` con TypeScript
+- [x] **7.3** Tres nodos: `evaluarIntencion`, `consultarHerramienta`, `prepararEscalado`
+- [x] **7.4** Aristas condicionales según `requiereEscalado`
+- [x] **7.5** Compilar y correr el grafo con un mensaje de prueba
 
 ### Pregunta de comprensión
 ¿Por qué el estado es tipado con TypeScript y qué problema evita
@@ -71,10 +71,10 @@ interrumpida sin checkpointer?
 ```
 
 ### Ejercicios
-- [ ] **8.1** Checkpointer con PostgreSQL (`PostgresSaver`)
-- [ ] **8.2** Nodo `evaluarIntencion` usando el modelo de IA
-- [ ] **8.3** Tools de soporte: `obtener_pedido`, `iniciar_devolucion`, `escalar_a_humano`
-- [ ] **8.4** `ToolNode` integrado en el grafo
+- [x] **8.1** Checkpointer con PostgreSQL (`PostgresSaver`)
+- [x] **8.2** Nodo `evaluarIntencion` usando el modelo de IA
+- [x] **8.3** Tools de soporte: `obtener_pedido`, `iniciar_devolucion`, `escalar_a_humano`
+- [x] **8.4** `ToolNode` integrado en el grafo
 
 ### Casos de prueba obligatorios
 ```
@@ -109,9 +109,9 @@ y a uno de Soporte usando el graph builder.
 
 ## Checklist de la Fase 3
 
-- [ ] Primer grafo con tres nodos y aristas condicionales
-- [ ] Bot de soporte detectando cuándo escalar correctamente
-- [ ] Checkpointer guardando estado en PostgreSQL
+- [x] Primer grafo con tres nodos y aristas condicionales
+- [x] Bot de soporte detectando cuándo escalar correctamente
+- [x] Checkpointer guardando estado en PostgreSQL
 - [ ] Human-in-the-loop pausando el grafo en acciones críticas
 - [ ] Graph builder generando grafos distintos para FAQ y Soporte
 - [ ] Mismo endpoint sirve a ambos arquetipos correctamente
