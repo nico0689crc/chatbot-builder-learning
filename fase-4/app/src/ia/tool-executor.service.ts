@@ -24,8 +24,9 @@ export class ToolExecutorService {
 
       return tool(
         async (args: Record<string, unknown>) => {
-          if (!t.conector) return { error: 'Tool sin conector configurado' };
-          return this.executeConector(t.conector, args);
+          if (!t.conector) return JSON.stringify({ error: 'Tool sin conector configurado' });
+          const result = await this.executeConector(t.conector, args);
+          return JSON.stringify(result);
         },
         {
           name: t.nombre,
