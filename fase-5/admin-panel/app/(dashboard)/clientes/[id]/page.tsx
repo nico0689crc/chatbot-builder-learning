@@ -24,14 +24,23 @@ export default async function ClienteDetailPage({
 }) {
 
   const { id } = await params
-  const [cliente, tools, metricas] = await Promise.all([
-    api.clientes.get(id),
+
+  // cliente es crítico — si falla, 404
+  let cliente
+  try {
+    cliente = await api.clientes.get(id)
+  } catch {
+    notFound()
+  }
+
+  // tools y métricas fallan de forma independiente
+  const [toolsResult, metricasResult] = await Promise.allSettled([
     api.tools.list(id),
     api.metricas.get(id),
   ])
-  if (!cliente) {
-    notFound()
-  }
+
+  const tools = toolsResult.status === "fulfilled" ? toolsResult.value : null
+  const metricas = metricasResult.status === "fulfilled" ? metricasResult.value : null
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -54,17 +63,23 @@ export default async function ClienteDetailPage({
       </div>
 
       {/* Métricas */}
-      <div className="grid grid-cols-4 gap-4">
-        <MetricaCard label="Conversaciones" value={metricas.conversacionesTotales} />
-        <MetricaCard label="Mensajes" value={metricas.mensajesTotales} />
-        <MetricaCard label="Tasa resolución" value={`${metricas.tasaResolucionPct}%`} />
-        <MetricaCard
-          label="Duración prom."
-          value={`${metricas.duracionPromedioMin} min`}
-          link={`/clientes/${cliente.id}/metricas`}
-          linkLabel="Ver reporte completo →"
-        />
-      </div>
+      {metricas ? (
+        <div className="grid grid-cols-4 gap-4">
+          <MetricaCard label="Conversaciones" value={metricas.conversacionesTotales} />
+          <MetricaCard label="Mensajes" value={metricas.mensajesTotales} />
+          <MetricaCard label="Tasa resolución" value={`${metricas.tasaResolucionPct}%`} />
+          <MetricaCard
+            label="Duración prom."
+            value={`${metricas.duracionPromedioMin} min`}
+            link={`/clientes/${cliente.id}/metricas`}
+            linkLabel="Ver reporte completo →"
+          />
+        </div>
+      ) : (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          No se pudieron cargar las métricas. El backend puede estar reiniciando.
+        </div>
+      )}
 
       {/* System prompt */}
       <Card>
@@ -82,7 +97,7 @@ export default async function ClienteDetailPage({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">
-            Tools ({tools.length})
+            Tools {tools ? `(${tools.length})` : ""}
           </CardTitle>
           <Link
             href={`/clientes/${cliente.id}/tools/nueva`}
@@ -92,7 +107,11 @@ export default async function ClienteDetailPage({
           </Link>
         </CardHeader>
         <CardContent>
-          {tools.length === 0 ? (
+          {!tools ? (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+              No se pudieron cargar las tools.
+            </p>
+          ) : tools.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">
               Este cliente no tiene tools configuradas
             </p>
