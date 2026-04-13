@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 
 interface Props {
   cliente: Cliente
@@ -143,6 +144,9 @@ export function WidgetConfig({ cliente, apiUrl }: Props) {
               {copied ? "Copiado ✓" : "Copiar"}
             </Button>
           </div>
+          <Link target="_blank" href={`/public/${cliente.id}`} className="text-xs text-black underline underline-offset-2 mt-2 inline-block">
+            Ver página pública
+          </Link>
         </div>
 
       </CardContent>
