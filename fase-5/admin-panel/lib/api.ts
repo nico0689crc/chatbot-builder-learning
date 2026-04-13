@@ -1,6 +1,7 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  console.log(`${BASE_URL}${path}`)
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
@@ -58,11 +59,14 @@ export interface Conector {
 }
 
 export interface Metricas {
+  cliente: { id: string; nombre: string }
   periodo: string
-  conversaciones: number
-  mensajes: number
-  conversacionesEscaladas: number
+  conversacionesTotales: number
+  mensajesTotales: number
+  tasaResolucionPct: number
   duracionPromedioMin: number
+  consultasFrecuentes: { tema: string; count: number }[]
+  conversacionesPorDia: { dia: string; total: number }[]
 }
 
 export interface CrearClientePayload {

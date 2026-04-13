@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, use } from "react"
 import { useRouter } from "next/navigation"
 import { api, type Tool, type Parametro } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -19,10 +19,10 @@ const TIPOS_PARAM = ["string", "number", "boolean"] as const
 export default function NuevaToolPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const router = useRouter()
-  const clienteId = params.id
+  const { id: clienteId } = use(params)
 
   // Paso 1: tool creada
   const [tool, setTool] = useState<Tool | null>(null)

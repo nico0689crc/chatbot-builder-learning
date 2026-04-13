@@ -19,17 +19,16 @@ export const dynamic = "force-dynamic"
 export default async function ClienteDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  let cliente, tools, metricas
 
-  try {
-    ;[cliente, tools, metricas] = await Promise.all([
-      api.clientes.get(params.id),
-      api.tools.list(params.id),
-      api.metricas.get(params.id),
-    ])
-  } catch {
+  const { id } = await params
+  const [cliente, tools, metricas] = await Promise.all([
+    api.clientes.get(id),
+    api.tools.list(id),
+    api.metricas.get(id),
+  ])
+  if (!cliente) {
     notFound()
   }
 
@@ -55,12 +54,14 @@ export default async function ClienteDetailPage({
 
       {/* Métricas */}
       <div className="grid grid-cols-4 gap-4">
-        <MetricaCard label="Conversaciones" value={metricas.conversaciones} />
-        <MetricaCard label="Mensajes" value={metricas.mensajes} />
-        <MetricaCard label="Escalaciones" value={metricas.conversacionesEscaladas} />
+        <MetricaCard label="Conversaciones" value={metricas.conversacionesTotales} />
+        <MetricaCard label="Mensajes" value={metricas.mensajesTotales} />
+        <MetricaCard label="Tasa resolución" value={`${metricas.tasaResolucionPct}%`} />
         <MetricaCard
           label="Duración prom."
-          value={`${metricas.duracionPromedioMin.toFixed(1)} min`}
+          value={`${metricas.duracionPromedioMin} min`}
+          link={`/clientes/${cliente.id}/metricas`}
+          linkLabel="Ver reporte completo →"
         />
       </div>
 
@@ -128,12 +129,27 @@ export default async function ClienteDetailPage({
   )
 }
 
-function MetricaCard({ label, value }: { label: string; value: string | number }) {
+function MetricaCard({
+  label,
+  value,
+  link,
+  linkLabel,
+}: {
+  label: string
+  value: string | number
+  link?: string
+  linkLabel?: string
+}) {
   return (
     <Card>
       <CardContent className="pt-6">
         <p className="text-2xl font-semibold">{value}</p>
         <p className="text-sm text-muted-foreground mt-1">{label}</p>
+        {link && linkLabel && (
+          <Link href={link} className="text-xs text-black underline underline-offset-2 mt-2 inline-block">
+            {linkLabel}
+          </Link>
+        )}
       </CardContent>
     </Card>
   )
