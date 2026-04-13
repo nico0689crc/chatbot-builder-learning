@@ -115,6 +115,11 @@ export const api = {
         `/admin/clientes/${id}/widget`,
         { method: "PATCH", body: JSON.stringify(data) }
       ),
+    updateSystemPrompt: (id: string, systemPrompt: string) =>
+      request<Pick<Cliente, "id" | "systemPrompt">>(
+        `/admin/clientes/${id}/system-prompt`,
+        { method: "PATCH", body: JSON.stringify({ systemPrompt }) }
+      ),
   },
 
   tools: {

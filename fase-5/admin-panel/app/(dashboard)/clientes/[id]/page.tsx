@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { WidgetConfig } from "@/components/widget-config"
+import { SystemPromptEditor } from "@/components/system-prompt-editor"
 import {
   Table,
   TableBody,
@@ -82,16 +83,7 @@ export default async function ClienteDetailPage({
       )}
 
       {/* System prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">System prompt</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-sm whitespace-pre-wrap font-sans text-gray-700 bg-gray-50 rounded-md p-4">
-            {cliente.systemPrompt}
-          </pre>
-        </CardContent>
-      </Card>
+      <SystemPromptEditor cliente={cliente} />
 
       {/* Tools */}
       <Card>
