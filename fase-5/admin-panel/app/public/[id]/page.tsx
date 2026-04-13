@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { use } from "react"
 import { api } from "@/lib/api"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
@@ -9,7 +8,7 @@ export default async function PublicPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = use(params)
+  const { id } = await params
 
   let cliente
   try {

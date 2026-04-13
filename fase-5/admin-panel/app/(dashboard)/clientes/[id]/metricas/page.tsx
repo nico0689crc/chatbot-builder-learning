@@ -1,4 +1,3 @@
-import { use } from "react"
 import Link from "next/link"
 import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -26,8 +25,8 @@ export default async function MetricasPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ periodo?: string }>
 }) {
-  const { id } = use(params)
-  const { periodo: periodoParam } = use(searchParams)
+  const { id } = await params
+  const { periodo: periodoParam } = await searchParams
 
   const periodos = generarUltimosPeriodos(6)
   const periodo = periodoParam ?? periodos[0].value
