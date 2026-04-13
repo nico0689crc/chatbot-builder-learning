@@ -74,12 +74,17 @@ export interface CrearClientePayload {
 export interface CrearToolPayload {
   nombre: string
   descripcion: string
-  conector: {
-    tipo: string
-    url: string
-    metodo: string
-    headers: Record<string, string>
-  }
+  tipo: string
+  url: string
+  metodo?: string
+  headers?: Record<string, string>
+}
+
+export interface CrearParametroPayload {
+  nombre: string
+  tipo: string
+  descripcion: string
+  requerido?: boolean
 }
 
 // --- Clientes ---
@@ -99,6 +104,11 @@ export const api = {
     list: (clienteId: string) => request<Tool[]>(`/admin/clientes/${clienteId}/tools`),
     create: (clienteId: string, data: CrearToolPayload) =>
       request<Tool>(`/admin/clientes/${clienteId}/tools`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    addParametro: (clienteId: string, toolId: string, data: CrearParametroPayload) =>
+      request<Parametro>(`/admin/clientes/${clienteId}/tools/${toolId}/parametros`, {
         method: "POST",
         body: JSON.stringify(data),
       }),
