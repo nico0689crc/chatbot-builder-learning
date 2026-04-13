@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
+import { ActualizarSystemPromptDto, ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -70,6 +70,16 @@ export class AdminService {
         descripcion: dto.descripcion,
         requerido: dto.requerido ?? true,
       },
+    });
+  }
+
+  async actualizarSystemPrompt(clienteId: string, dto: ActualizarSystemPromptDto) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException(`Cliente ${clienteId} no encontrado`);
+    return this.prisma.cliente.update({
+      where: { id: clienteId },
+      data: { systemPrompt: dto.systemPrompt },
+      select: { id: true, systemPrompt: true },
     });
   }
 

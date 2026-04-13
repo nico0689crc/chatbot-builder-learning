@@ -25,3 +25,7 @@ export class ActualizarWidgetDto {
   widgetColor?: string;
   widgetBienvenida?: string;
 }
+
+export class ActualizarSystemPromptDto {
+  systemPrompt: string;
+}

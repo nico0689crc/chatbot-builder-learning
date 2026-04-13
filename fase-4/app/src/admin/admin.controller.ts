@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { Public } from '../common/decorators/public.decorator';
 import { AdminService } from './admin.service';
 import { MetricasService } from '../metricas/metricas.service';
-import { ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
+import { ActualizarSystemPromptDto, ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
 
 @Public()
 @Controller('admin')
@@ -27,6 +27,11 @@ export class AdminController {
   @Get('clientes/:id')
   obtenerCliente(@Param('id') id: string) {
     return this.adminService.obtenerCliente(id);
+  }
+
+  @Patch('clientes/:id/system-prompt')
+  actualizarSystemPrompt(@Param('id') id: string, @Body() body: ActualizarSystemPromptDto) {
+    return this.adminService.actualizarSystemPrompt(id, body);
   }
 
   @Patch('clientes/:id/widget')
