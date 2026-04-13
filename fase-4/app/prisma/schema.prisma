@@ -13,12 +13,17 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 model Cliente {
-  id           String   @id @default(cuid())
-  nombre       String
-  arquetipo    String   // "faq" | "soporte" | "turnos" | "ventas"
-  systemPrompt String
-  activo       Boolean  @default(true)
-  creadoEn     DateTime @default(now())
+  id               String   @id @default(cuid())
+  nombre           String
+  arquetipo        String   // "faq" | "soporte" | "turnos" | "ventas"
+  systemPrompt     String
+  activo           Boolean  @default(true)
+  creadoEn         DateTime @default(now())
+
+  // Widget config
+  widgetNombre     String   @default("")
+  widgetColor      String   @default("#2563eb")
+  widgetBienvenida String   @default("")
 
   conversaciones Conversacion[]
   metricas       MetricasMes[]

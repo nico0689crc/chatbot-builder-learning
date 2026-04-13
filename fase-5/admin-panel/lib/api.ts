@@ -1,7 +1,6 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  console.log(`${BASE_URL}${path}`)
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
@@ -29,6 +28,15 @@ export interface Cliente {
   systemPrompt: string
   activo: boolean
   creadoEn: string
+  widgetNombre: string
+  widgetColor: string
+  widgetBienvenida: string
+}
+
+export interface ActualizarWidgetPayload {
+  widgetNombre?: string
+  widgetColor?: string
+  widgetBienvenida?: string
 }
 
 export interface Tool {
@@ -102,6 +110,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    updateWidget: (id: string, data: ActualizarWidgetPayload) =>
+      request<Pick<Cliente, "id" | "widgetNombre" | "widgetColor" | "widgetBienvenida">>(
+        `/admin/clientes/${id}/widget`,
+        { method: "PATCH", body: JSON.stringify(data) }
+      ),
   },
 
   tools: {

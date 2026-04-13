@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { AdminService } from './admin.service';
 import { MetricasService } from '../metricas/metricas.service';
-import { CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
+import { ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
 
 @Public()
 @Controller('admin')
@@ -27,6 +27,11 @@ export class AdminController {
   @Get('clientes/:id')
   obtenerCliente(@Param('id') id: string) {
     return this.adminService.obtenerCliente(id);
+  }
+
+  @Patch('clientes/:id/widget')
+  actualizarWidget(@Param('id') id: string, @Body() body: ActualizarWidgetDto) {
+    return this.adminService.actualizarWidget(id, body);
   }
 
   // --- Tools ---

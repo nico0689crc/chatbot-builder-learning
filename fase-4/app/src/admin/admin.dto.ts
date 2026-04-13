@@ -19,3 +19,9 @@ export class CrearParametroDto {
   descripcion: string;
   requerido?: boolean; // default true
 }
+
+export class ActualizarWidgetDto {
+  widgetNombre?: string;
+  widgetColor?: string;
+  widgetBienvenida?: string;
+}

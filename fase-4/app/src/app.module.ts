@@ -7,6 +7,7 @@ import { ClientesModule } from './clientes/clientes.module';
 import { IAModule } from './ia/ia.module';
 import { CanalesModule } from './canales/canales.module';
 import { AdminModule } from './admin/admin.module';
+import { WidgetModule } from './widget/widget.module';
 import { TenantGuard } from './common/guards/tenant.guard';
 
 @Module({
@@ -20,6 +21,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
     IAModule,
     CanalesModule,
     AdminModule,
+    WidgetModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: TenantGuard }],
 })

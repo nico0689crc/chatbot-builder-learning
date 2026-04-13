@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
+import { ActualizarWidgetDto, CrearClienteDto, CrearParametroDto, CrearToolDto } from './admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -70,6 +70,16 @@ export class AdminService {
         descripcion: dto.descripcion,
         requerido: dto.requerido ?? true,
       },
+    });
+  }
+
+  async actualizarWidget(clienteId: string, dto: ActualizarWidgetDto) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException(`Cliente ${clienteId} no encontrado`);
+    return this.prisma.cliente.update({
+      where: { id: clienteId },
+      data: dto,
+      select: { id: true, widgetNombre: true, widgetColor: true, widgetBienvenida: true },
     });
   }
 

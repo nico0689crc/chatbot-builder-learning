@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { WidgetConfig } from "@/components/widget-config"
 import {
   Table,
   TableBody,
@@ -125,6 +126,12 @@ export default async function ClienteDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Widget */}
+      <WidgetConfig
+        cliente={cliente}
+        apiUrl={process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}
+      />
     </div>
   )
 }
