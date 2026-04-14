@@ -17,7 +17,7 @@ export class CanalesController {
     private iaService: IAService,
     private metricasService: MetricasService,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   @Post()
   async chat(

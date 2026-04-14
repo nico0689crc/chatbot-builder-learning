@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { FlujoCanvas } from "@/components/flujo-canvas"
+import { MermaidCanvas } from "@/components/mermaid-canvas"
 import { ConfigForm } from "@/components/config-form"
 
 const TIPOS_NODO: TipoNodo[] = [
@@ -528,7 +528,7 @@ export function FlujoSection({
       </div>
 
       {/* Canvas */}
-      <FlujoCanvas nodos={flujo.nodos} aristas={flujo.aristas} />
+      <MermaidCanvas clienteId={clienteId} />
 
       {/* Nodos */}
       <Card>

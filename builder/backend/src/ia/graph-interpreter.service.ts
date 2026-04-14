@@ -131,7 +131,7 @@ export class GraphInterpreterService {
   }
 
   private makeLlmCallNode<State>(node: NodeDefinition, systemPrompt: string, tools: any[]) {
-    const config = node.config as unknown as LlmCallConfig;
+    const config: LlmCallConfig = node.config;
     const modelName = config.modelName ?? 'gemini-2.5-flash';
     const baseModel = new ChatGoogleGenerativeAI({ model: modelName });
 
@@ -146,6 +146,7 @@ export class GraphInterpreterService {
         ),
         required: Object.keys(config.outputFields),
       };
+      console.log("**** Schema", schema);
       const structuredModel = baseModel.withStructuredOutput(schema as any);
 
       return async (state: State & { messages: any[] }): Promise<Partial<State>> => {

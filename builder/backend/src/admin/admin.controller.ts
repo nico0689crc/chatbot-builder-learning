@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Put } from '@
 import { Public } from '../common/decorators/public.decorator';
 import { AdminService } from './admin.service';
 import { MetricasService } from '../metricas/metricas.service';
+import { IAService } from '../ia/ia.service';
 import {
   ActualizarAristaDto,
   ActualizarCampoDto,
@@ -24,6 +25,7 @@ export class AdminController {
   constructor(
     private adminService: AdminService,
     private metricasService: MetricasService,
+    private iaService: IAService,
   ) {}
 
   // --- Clientes ---
@@ -163,6 +165,14 @@ export class AdminController {
   @Delete('clientes/:id/flujo/aristas/:aristaId')
   eliminarArista(@Param('id') id: string, @Param('aristaId') aristaId: string) {
     return this.adminService.eliminarArista(id, aristaId);
+  }
+
+  @Get('clientes/:id/flujo/mermaid')
+  async obtenerMermaid(@Param('id') id: string): Promise<{ diagram: string }> {
+    const cliente = await this.adminService.obtenerCliente(id);
+    const graph = await this.iaService.buildGraph(id, cliente.systemPrompt);
+    const diagram = graph.getGraph().drawMermaid();
+    return { diagram };
   }
 
   // --- Métricas ---

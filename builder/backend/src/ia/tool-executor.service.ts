@@ -100,13 +100,11 @@ export class ToolExecutorService {
         Object.entries(args).map(([k, v]) => [k, String(v)]),
       );
       url = `${url}?${params.toString()}`;
+      console.log("URL: ", url);
     } else {
       body = JSON.stringify(args);
+      console.log("BODY: ", body);
     }
-
-    console.log('URL:', url);
-    console.log('Headers:', headers);
-    console.log('Body:', body);
 
     const response = await fetch(url, {
       method: conector.metodo,

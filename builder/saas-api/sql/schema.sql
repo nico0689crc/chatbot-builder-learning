@@ -1,10 +1,9 @@
 -- ── Reset ────────────────────────────────────────────────────────────────────
 
-drop trigger if exists tickets_actualizado_en on tickets;
-drop function if exists update_actualizado_en;
-drop table if exists tickets;
-drop table if exists usuarios;
-drop table if exists planes;
+drop table if exists tickets cascade;
+drop table if exists usuarios cascade;
+drop table if exists planes cascade;
+drop function if exists update_actualizado_en cascade;
 
 -- ── Planes de suscripción ────────────────────────────────────────────────────
 

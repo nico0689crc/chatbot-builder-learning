@@ -298,6 +298,9 @@ export const api = {
       request<{ deleted: boolean }>(`/admin/clientes/${clienteId}/flujo/campos/${nombre}`, {
         method: "DELETE",
       }),
+
+    getMermaid: (clienteId: string) =>
+      request<{ diagram: string }>(`/admin/clientes/${clienteId}/flujo/mermaid`),
   },
 
   metricas: {
