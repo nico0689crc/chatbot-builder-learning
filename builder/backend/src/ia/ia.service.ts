@@ -23,9 +23,9 @@ export class IAService implements OnModuleInit {
   }
 
   async buildGraph(clienteId: string, systemPrompt: string) {
-    // if (this.graphCache.has(clienteId)) {
-    //   return this.graphCache.get(clienteId);
-    // }
+    if (this.graphCache.has(clienteId)) {
+      return this.graphCache.get(clienteId);
+    }
 
     const [tools, flowDef] = await Promise.all([
       this.toolExecutor.loadToolsForCliente(clienteId),
