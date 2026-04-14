@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 4 — Schema inicial
+// Se irá expandiendo en sesiones 11 y 12
+// ---------------------------------------------------------------------------
+
+model Cliente {
+  id               String   @id @default(cuid())
+  nombre           String
+  arquetipo        String   // "faq" | "soporte" | "turnos" | "ventas"
+  systemPrompt     String
+  activo           Boolean  @default(true)
+  creadoEn         DateTime @default(now())
+
+  // Widget config
+  widgetNombre     String   @default("")
+  widgetColor      String   @default("#2563eb")
+  widgetBienvenida String   @default("")
+
+  conversaciones Conversacion[]
+  metricas       MetricasMes[]
+  flujo          FlujoDef?
+}
+
+model Conversacion {
+  id         String    @id @default(cuid())
+  clienteId  String
+  sessionId  String
+  creadaEn   DateTime  @default(now())
+  cerradaEn  DateTime?
+
+  cliente  Cliente   @relation(fields: [clienteId], references: [id])
+  mensajes Mensaje[]
+
+  @@unique([clienteId, sessionId])
+}
+
+model Mensaje {
+  id             String   @id @default(cuid())
+  conversacionId String
+  rol            String   // "user" | "assistant"
+  contenido      String
+  creadoEn       DateTime @default(now())
+
+  conversacion Conversacion @relation(fields: [conversacionId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Sesión 13 — Métricas mensuales
+// ---------------------------------------------------------------------------
+
+model MetricasMes {
+  id                      String   @id @default(cuid())
+  clienteId               String
+  periodo                 String   // "2026-04" — año-mes
+  conversaciones          Int      @default(0)
+  mensajes                Int      @default(0)
+  conversacionesEscaladas Int      @default(0)
+  duracionPromedioMin     Float    @default(0)
+  actualizadoEn           DateTime @updatedAt
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@unique([clienteId, periodo])
+}
+
+// ---------------------------------------------------------------------------
+// Fase 5 — Flujos configurables desde la DB
+// ---------------------------------------------------------------------------
+
+model FlujoDef {
+  id            String    @id @default(cuid())
+  clienteId     String    @unique
+  nombre        String
+  descripcion   String    @default("")
+  activo        Boolean   @default(true)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  cliente Cliente    @relation(fields: [clienteId], references: [id])
+  campos  CampoDef[]
+  nodos   NodoDef[]
+  aristas AristaDef[]
+}
+
+model CampoDef {
+  id      String @id @default(cuid())
+  flujoId String
+  nombre  String
+  tipo    String   // "string" | "number" | "boolean" | "object" | "array"
+  reducer String   // "last_wins" | "append"
+  default String   @default("null") // valor default como JSON string
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
+
+  @@unique([flujoId, nombre])
+}
+
+model NodoDef {
+  id      String @id @default(cuid())
+  flujoId String
+  nombre  String
+  tipo    String // "llm_call" | "tool_executor" | "classifier" | "condition" | "http_request" | "human_handoff"
+  config  Json   @default("{}")
+  orden   Int    @default(0)
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
+
+  @@unique([flujoId, nombre])
+}
+
+model AristaDef {
+  id        String  @id @default(cuid())
+  flujoId   String
+  origen    String  // nombre del nodo o "__start__"
+  destino   String  // nombre del nodo o "__end__"
+  condicion String? // null = arista simple; non-null = label de routing condicional
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Sesión 11 — Tools y conectores
+// ---------------------------------------------------------------------------
+
+model Tool {
+  id          String   @id @default(cuid())
+  clienteId   String
+  nombre      String   // nombre de la función que el LLM puede llamar
+  descripcion String
+  activa      Boolean  @default(true)
+  creadoEn    DateTime @default(now())
+
+  conector  Conector?
+  parametros Parametro[]
+
+  @@unique([clienteId, nombre])
+}
+
+model Conector {
+  id       String @id @default(cuid())
+  toolId   String @unique
+  tipo     String // "API_REST" | "GOOGLE_SHEETS"
+  url      String // endpoint o spreadsheet ID
+  metodo   String @default("GET") // GET | POST | PUT
+  headers  Json   @default("{}")  // headers HTTP adicionales
+
+  tool Tool @relation(fields: [toolId], references: [id])
+}
+
+model Parametro {
+  id          String  @id @default(cuid())
+  toolId      String
+  nombre      String
+  tipo        String  // "string" | "number" | "boolean"
+  descripcion String
+  requerido   Boolean @default(true)
+
+  tool Tool @relation(fields: [toolId], references: [id])
+}
