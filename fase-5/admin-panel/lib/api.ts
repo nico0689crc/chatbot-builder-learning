@@ -66,6 +66,94 @@ export interface Conector {
   headers: Record<string, string>
 }
 
+// --- Flujo ---
+
+export type TipoNodo = "llm_call" | "tool_executor" | "classifier" | "condition" | "http_request" | "human_handoff"
+export type TipoCampo = "string" | "number" | "boolean" | "object" | "array"
+export type ReducerCampo = "last_wins" | "append"
+
+export interface CampoDef {
+  id: string
+  flujoId: string
+  nombre: string
+  tipo: TipoCampo
+  reducer: ReducerCampo
+  default: string
+}
+
+export interface NodoDef {
+  id: string
+  flujoId: string
+  nombre: string
+  tipo: TipoNodo
+  config: Record<string, unknown>
+  orden: number
+}
+
+export interface AristaDef {
+  id: string
+  flujoId: string
+  origen: string
+  destino: string
+  condicion: string | null
+}
+
+export interface FlujoDef {
+  id: string
+  clienteId: string
+  nombre: string
+  descripcion: string
+  activo: boolean
+  creadoEn: string
+  actualizadoEn: string
+  campos: CampoDef[]
+  nodos: NodoDef[]
+  aristas: AristaDef[]
+}
+
+export interface CrearFlujoPayload {
+  nombre: string
+  descripcion?: string
+}
+
+export interface CrearNodoPayload {
+  nombre: string
+  tipo: TipoNodo
+  config?: Record<string, unknown>
+  orden?: number
+}
+
+export interface CrearAristaPayload {
+  origen: string
+  destino: string
+  condicion?: string
+}
+
+export interface ActualizarAristaPayload {
+  origen?: string
+  destino?: string
+  condicion?: string | null
+}
+
+export interface CrearCampoPayload {
+  nombre: string
+  tipo: TipoCampo
+  reducer: ReducerCampo
+  default?: string
+}
+
+export interface ActualizarNodoPayload {
+  tipo?: TipoNodo
+  config?: Record<string, unknown>
+  orden?: number
+}
+
+export interface ActualizarCampoPayload {
+  tipo?: TipoCampo
+  reducer?: ReducerCampo
+  default?: string
+}
+
 export interface Metricas {
   cliente: { id: string; nombre: string }
   periodo: string
@@ -88,6 +176,14 @@ export interface CrearToolPayload {
   descripcion: string
   tipo: string
   url: string
+  metodo?: string
+  headers?: Record<string, string>
+}
+
+export interface ActualizarToolPayload {
+  descripcion?: string
+  activa?: boolean
+  url?: string
   metodo?: string
   headers?: Record<string, string>
 }
@@ -124,15 +220,83 @@ export const api = {
 
   tools: {
     list: (clienteId: string) => request<Tool[]>(`/admin/clientes/${clienteId}/tools`),
+    get: (clienteId: string, toolId: string) =>
+      request<Tool>(`/admin/clientes/${clienteId}/tools/${toolId}`),
     create: (clienteId: string, data: CrearToolPayload) =>
       request<Tool>(`/admin/clientes/${clienteId}/tools`, {
         method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (clienteId: string, toolId: string, data: ActualizarToolPayload) =>
+      request<Tool>(`/admin/clientes/${clienteId}/tools/${toolId}`, {
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
     addParametro: (clienteId: string, toolId: string, data: CrearParametroPayload) =>
       request<Parametro>(`/admin/clientes/${clienteId}/tools/${toolId}/parametros`, {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    deleteParametro: (clienteId: string, toolId: string, parametroId: string) =>
+      request<{ deleted: boolean }>(
+        `/admin/clientes/${clienteId}/tools/${toolId}/parametros/${parametroId}`,
+        { method: "DELETE" }
+      ),
+  },
+
+  flujo: {
+    get: (clienteId: string) => request<FlujoDef>(`/admin/clientes/${clienteId}/flujo`),
+    create: (clienteId: string, data: CrearFlujoPayload) =>
+      request<FlujoDef>(`/admin/clientes/${clienteId}/flujo`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    delete: (clienteId: string) =>
+      request<{ deleted: boolean }>(`/admin/clientes/${clienteId}/flujo`, { method: "DELETE" }),
+
+    addNodo: (clienteId: string, data: CrearNodoPayload) =>
+      request<NodoDef>(`/admin/clientes/${clienteId}/flujo/nodos`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateNodo: (clienteId: string, nombre: string, data: ActualizarNodoPayload) =>
+      request<NodoDef>(`/admin/clientes/${clienteId}/flujo/nodos/${nombre}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteNodo: (clienteId: string, nombre: string) =>
+      request<{ deleted: boolean }>(`/admin/clientes/${clienteId}/flujo/nodos/${nombre}`, {
+        method: "DELETE",
+      }),
+
+    addArista: (clienteId: string, data: CrearAristaPayload) =>
+      request<AristaDef>(`/admin/clientes/${clienteId}/flujo/aristas`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateArista: (clienteId: string, aristaId: string, data: ActualizarAristaPayload) =>
+      request<AristaDef>(`/admin/clientes/${clienteId}/flujo/aristas/${aristaId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteArista: (clienteId: string, aristaId: string) =>
+      request<{ deleted: boolean }>(`/admin/clientes/${clienteId}/flujo/aristas/${aristaId}`, {
+        method: "DELETE",
+      }),
+
+    addCampo: (clienteId: string, data: CrearCampoPayload) =>
+      request<CampoDef>(`/admin/clientes/${clienteId}/flujo/campos`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateCampo: (clienteId: string, nombre: string, data: ActualizarCampoPayload) =>
+      request<CampoDef>(`/admin/clientes/${clienteId}/flujo/campos/${nombre}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    deleteCampo: (clienteId: string, nombre: string) =>
+      request<{ deleted: boolean }>(`/admin/clientes/${clienteId}/flujo/campos/${nombre}`, {
+        method: "DELETE",
       }),
   },
 

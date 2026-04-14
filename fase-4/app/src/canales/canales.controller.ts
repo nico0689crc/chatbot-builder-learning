@@ -30,9 +30,8 @@ export class CanalesController {
 
     const cliente = request.cliente;
     const grafo = await this.iaService.buildGraph(
-      cliente.arquetipo,
-      cliente.systemPrompt,
       cliente.id,
+      cliente.systemPrompt,
     );
 
     const config = {
@@ -44,7 +43,10 @@ export class CanalesController {
     );
 
     const last = result.messages[result.messages.length - 1];
-    const respuesta = last.content as string;
+    const respuesta =
+      typeof last.content === 'string'
+        ? last.content
+        : JSON.stringify(last.content);
 
     // Persistir conversación y mensaje, luego registrar métricas
     void this.persistirYRegistrar(

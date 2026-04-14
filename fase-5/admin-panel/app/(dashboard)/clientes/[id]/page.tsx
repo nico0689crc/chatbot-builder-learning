@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { WidgetConfig } from "@/components/widget-config"
 import { SystemPromptEditor } from "@/components/system-prompt-editor"
+import { FlujoSection } from "@/components/flujo-section"
 import {
   Table,
   TableBody,
@@ -34,14 +35,16 @@ export default async function ClienteDetailPage({
     notFound()
   }
 
-  // tools y métricas fallan de forma independiente
-  const [toolsResult, metricasResult] = await Promise.allSettled([
+  // tools, métricas y flujo fallan de forma independiente
+  const [toolsResult, metricasResult, flujoResult] = await Promise.allSettled([
     api.tools.list(id),
     api.metricas.get(id),
+    api.flujo.get(id),
   ])
 
   const tools = toolsResult.status === "fulfilled" ? toolsResult.value : null
   const metricas = metricasResult.status === "fulfilled" ? metricasResult.value : null
+  const flujo = flujoResult.status === "fulfilled" ? flujoResult.value : null
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -115,6 +118,7 @@ export default async function ClienteDetailPage({
                   <TableHead>Descripción</TableHead>
                   <TableHead>Conector</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,6 +134,14 @@ export default async function ClienteDetailPage({
                         {tool.activa ? "Activa" : "Inactiva"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/clientes/${cliente.id}/tools/${tool.id}/editar`}
+                        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                      >
+                        Editar
+                      </Link>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -137,6 +149,9 @@ export default async function ClienteDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Flujo */}
+      <FlujoSection clienteId={cliente.id} initialFlujo={flujo} />
 
       {/* Widget */}
       <WidgetConfig

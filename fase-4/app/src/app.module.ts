@@ -13,7 +13,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
+      rootPath: join(__dirname, '..', '..', 'public'),
       serveRoot: '/public',
     }),
     PrismaModule,

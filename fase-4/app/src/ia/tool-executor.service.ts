@@ -7,7 +7,7 @@ type ConectorResult = Record<string, unknown> | { error: string };
 
 @Injectable()
 export class ToolExecutorService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Carga las tools activas de un cliente desde la DB y las devuelve
@@ -103,6 +103,10 @@ export class ToolExecutorService {
     } else {
       body = JSON.stringify(args);
     }
+
+    console.log('URL:', url);
+    console.log('Headers:', headers);
+    console.log('Body:', body);
 
     const response = await fetch(url, {
       method: conector.metodo,

@@ -27,6 +27,7 @@ model Cliente {
 
   conversaciones Conversacion[]
   metricas       MetricasMes[]
+  flujo          FlujoDef?
 }
 
 model Conversacion {
@@ -69,6 +70,61 @@ model MetricasMes {
   cliente Cliente @relation(fields: [clienteId], references: [id])
 
   @@unique([clienteId, periodo])
+}
+
+// ---------------------------------------------------------------------------
+// Fase 5 — Flujos configurables desde la DB
+// ---------------------------------------------------------------------------
+
+model FlujoDef {
+  id            String    @id @default(cuid())
+  clienteId     String    @unique
+  nombre        String
+  descripcion   String    @default("")
+  activo        Boolean   @default(true)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  cliente Cliente    @relation(fields: [clienteId], references: [id])
+  campos  CampoDef[]
+  nodos   NodoDef[]
+  aristas AristaDef[]
+}
+
+model CampoDef {
+  id      String @id @default(cuid())
+  flujoId String
+  nombre  String
+  tipo    String   // "string" | "number" | "boolean" | "object" | "array"
+  reducer String   // "last_wins" | "append"
+  default String   @default("null") // valor default como JSON string
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
+
+  @@unique([flujoId, nombre])
+}
+
+model NodoDef {
+  id      String @id @default(cuid())
+  flujoId String
+  nombre  String
+  tipo    String // "llm_call" | "tool_executor" | "classifier" | "condition" | "http_request" | "human_handoff"
+  config  Json   @default("{}")
+  orden   Int    @default(0)
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
+
+  @@unique([flujoId, nombre])
+}
+
+model AristaDef {
+  id        String  @id @default(cuid())
+  flujoId   String
+  origen    String  // nombre del nodo o "__start__"
+  destino   String  // nombre del nodo o "__end__"
+  condicion String? // null = arista simple; non-null = label de routing condicional
+
+  flujo FlujoDef @relation(fields: [flujoId], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------------------------
