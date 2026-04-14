@@ -31,12 +31,18 @@ export interface Cliente {
   widgetNombre: string
   widgetColor: string
   widgetBienvenida: string
+  metaPhoneNumberId: string | null
 }
 
 export interface ActualizarWidgetPayload {
   widgetNombre?: string
   widgetColor?: string
   widgetBienvenida?: string
+}
+
+export interface ActualizarMetaPayload {
+  metaPhoneNumberId?: string
+  metaAccessToken?: string
 }
 
 export interface Tool {
@@ -216,6 +222,13 @@ export const api = {
         `/admin/clientes/${id}/system-prompt`,
         { method: "PATCH", body: JSON.stringify({ systemPrompt }) }
       ),
+    updateMeta: (id: string, data: ActualizarMetaPayload) =>
+      request<Pick<Cliente, "id" | "metaPhoneNumberId">>(
+        `/admin/clientes/${id}/meta`,
+        { method: "PATCH", body: JSON.stringify(data) }
+      ),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/admin/clientes/${id}`, { method: "DELETE" }),
   },
 
   tools: {

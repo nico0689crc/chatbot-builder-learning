@@ -37,13 +37,16 @@ export interface FlowDefinition {
 
 // Config shapes por tipo de nodo
 export interface LlmCallConfig {
-  modelName?: string;
+  provider?: string;  // e.g. 'google', 'openai', 'anthropic' — usa DEFAULT_LLM_PROVIDER si no se especifica
+  modelName?: string; // usa DEFAULT_LLM_MODEL si no se especifica
   // Si se define, el LLM responde con structured output y cada key se escribe al estado.
   // Ejemplo: { categoria: 'string', confianza: 'number' }
   outputFields?: Record<string, 'string' | 'number' | 'boolean'>;
 }
 
 export interface ClassifierConfig {
+  provider?: string;
+  modelName?: string;
   categories: string[];
   prompt: string;
   // Un solo campo (compatibilidad hacia atrás)
@@ -75,6 +78,8 @@ export interface HttpRequestConfig {
 }
 
 export interface HumanHandoffConfig {
+  provider?: string;
+  modelName?: string;
   message: string;
   escalatedField?: string;
 }

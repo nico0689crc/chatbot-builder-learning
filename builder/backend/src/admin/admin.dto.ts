@@ -26,6 +26,12 @@ export class ActualizarWidgetDto {
   widgetBienvenida?: string;
 }
 
+export class ActualizarMetaDto {
+  metaPhoneNumberId?: string;
+  // Si se envía vacío, se interpreta como "borrar el token"
+  metaAccessToken?: string;
+}
+
 export class ActualizarSystemPromptDto {
   systemPrompt: string;
 }

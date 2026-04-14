@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { WidgetConfig } from "@/components/widget-config"
+import { MetaConfig } from "@/components/meta-config"
 import { SystemPromptEditor } from "@/components/system-prompt-editor"
 import { FlujoSection } from "@/components/flujo-section"
 import {
@@ -158,6 +159,9 @@ export default async function ClienteDetailPage({
         cliente={cliente}
         apiUrl={process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}
       />
+
+      {/* Meta / WhatsApp */}
+      <MetaConfig cliente={cliente} />
     </div>
   )
 }

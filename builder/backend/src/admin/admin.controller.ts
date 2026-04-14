@@ -6,6 +6,7 @@ import { IAService } from '../ia/ia.service';
 import {
   ActualizarAristaDto,
   ActualizarCampoDto,
+  ActualizarMetaDto,
   ActualizarNodoDto,
   ActualizarSystemPromptDto,
   ActualizarToolDto,
@@ -45,6 +46,11 @@ export class AdminController {
     return this.adminService.obtenerCliente(id);
   }
 
+  @Delete('clientes/:id')
+  eliminarCliente(@Param('id') id: string) {
+    return this.adminService.eliminarCliente(id);
+  }
+
   @Patch('clientes/:id/system-prompt')
   actualizarSystemPrompt(@Param('id') id: string, @Body() body: ActualizarSystemPromptDto) {
     return this.adminService.actualizarSystemPrompt(id, body);
@@ -53,6 +59,11 @@ export class AdminController {
   @Patch('clientes/:id/widget')
   actualizarWidget(@Param('id') id: string, @Body() body: ActualizarWidgetDto) {
     return this.adminService.actualizarWidget(id, body);
+  }
+
+  @Patch('clientes/:id/meta')
+  actualizarMeta(@Param('id') id: string, @Body() body: ActualizarMetaDto) {
+    return this.adminService.actualizarMeta(id, body);
   }
 
   // --- Tools ---

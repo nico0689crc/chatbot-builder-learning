@@ -1,16 +1,15 @@
 import Link from "next/link"
 import { api, type Cliente } from "@/lib/api"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ClienteRow } from "@/components/cliente-row"
 
 export const dynamic = "force-dynamic"
 
@@ -61,28 +60,7 @@ export default async function ClientesPage() {
             </TableHeader>
             <TableBody>
               {clientes.map((cliente) => (
-                <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{cliente.nombre}</TableCell>
-                  <TableCell>
-                    <span className="capitalize">{cliente.arquetipo}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={cliente.activo ? "default" : "secondary"}>
-                      {cliente.activo ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(cliente.creadoEn).toLocaleDateString("es-AR")}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/clientes/${cliente.id}`}
-                      className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-                    >
-                      Ver →
-                    </Link>
-                  </TableCell>
-                </TableRow>
+                <ClienteRow key={cliente.id} cliente={cliente} />
               ))}
             </TableBody>
           </Table>

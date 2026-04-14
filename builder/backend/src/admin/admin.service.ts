@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { IAService } from '../ia/ia.service';
 import {
   ActualizarCampoDto,
+  ActualizarMetaDto,
   ActualizarNodoDto,
   ActualizarSystemPromptDto,
   ActualizarToolDto,
@@ -29,6 +31,14 @@ export class AdminService {
 
   crearCliente(dto: CrearClienteDto) {
     return this.prisma.cliente.create({ data: dto });
+  }
+
+  async eliminarCliente(id: string) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id } });
+    if (!cliente) throw new NotFoundException(`Cliente ${id} no encontrado`);
+    await this.prisma.cliente.delete({ where: { id } });
+    this.iaService.invalidateCache(id);
+    return { ok: true };
   }
 
   listarClientes() {
@@ -100,6 +110,60 @@ export class AdminService {
     });
     this.iaService.invalidateCache(clienteId);
     return result;
+  }
+
+  async actualizarMeta(clienteId: string, dto: ActualizarMetaDto) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException(`Cliente ${clienteId} no encontrado`);
+
+    const data: { metaPhoneNumberId?: string | null; metaAccessToken?: string | null } = {};
+
+    if (dto.metaPhoneNumberId !== undefined) {
+      data.metaPhoneNumberId = dto.metaPhoneNumberId || null;
+    }
+    if (dto.metaAccessToken !== undefined) {
+      data.metaAccessToken = dto.metaAccessToken
+        ? this.encrypt(dto.metaAccessToken)
+        : null;
+    }
+
+    return this.prisma.cliente.update({
+      where: { id: clienteId },
+      data,
+      select: { id: true, metaPhoneNumberId: true },
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Encriptación simétrica para tokens sensibles (AES-256-GCM)
+  // Requiere META_ENCRYPTION_KEY en .env (mínimo 32 caracteres)
+  // ---------------------------------------------------------------------------
+
+  private getEncryptionKey(): Buffer {
+    const secret = process.env.META_ENCRYPTION_KEY;
+    if (!secret) throw new InternalServerErrorException('META_ENCRYPTION_KEY no configurada');
+    return scryptSync(secret, 'salt', 32) as Buffer;
+  }
+
+  encrypt(plain: string): string {
+    const key = this.getEncryptionKey();
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    // Formato: iv(hex):tag(hex):ciphertext(hex)
+    return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted.toString('hex')}`;
+  }
+
+  decrypt(encoded: string): string {
+    const key = this.getEncryptionKey();
+    const [ivHex, tagHex, dataHex] = encoded.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const tag = Buffer.from(tagHex, 'hex');
+    const data = Buffer.from(dataHex, 'hex');
+    const decipher = createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+    return decipher.update(data) + decipher.final('utf8');
   }
 
   async actualizarWidget(clienteId: string, dto: ActualizarWidgetDto) {

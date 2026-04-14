@@ -25,6 +25,10 @@ model Cliente {
   widgetColor      String   @default("#2563eb")
   widgetBienvenida String   @default("")
 
+  // Meta / WhatsApp config
+  metaPhoneNumberId String?
+  metaAccessToken   String?
+
   conversaciones Conversacion[]
   metricas       MetricasMes[]
   flujo          FlujoDef?

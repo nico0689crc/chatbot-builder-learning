@@ -8,5 +8,6 @@ import { IAModule } from '../ia/ia.module';
   imports: [MetricasModule, IAModule],
   controllers: [AdminController],
   providers: [AdminService],
+  exports: [AdminService],
 })
 export class AdminModule {}

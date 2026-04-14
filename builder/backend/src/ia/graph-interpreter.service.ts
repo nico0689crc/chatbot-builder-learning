@@ -7,7 +7,6 @@ import {
   Annotation,
 } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { AIMessage, SystemMessage } from '@langchain/core/messages';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import {
@@ -21,9 +20,11 @@ import {
   HttpRequestConfig,
   HumanHandoffConfig,
 } from './graph-types';
+import { LlmFactoryService } from './llm-factory.service';
 
 @Injectable()
 export class GraphInterpreterService {
+  constructor(private readonly llmFactory: LlmFactoryService) {}
 
   private validateFlow(flow: FlowDefinition): void {
     const nodeNames = new Set(flow.nodes.map(n => n.nombre));
@@ -173,8 +174,7 @@ export class GraphInterpreterService {
 
   private makeLlmCallNode<State>(node: NodeDefinition, systemPrompt: string, tools: any[]) {
     const config: LlmCallConfig = node.config;
-    const modelName = config.modelName ?? 'gemini-2.5-flash';
-    const baseModel = new ChatGoogleGenerativeAI({ model: modelName });
+    const baseModel = this.llmFactory.create(config.provider, config.modelName);
 
     // outputFields: structured output — el LLM responde con un objeto JSON
     // y cada key se escribe directamente al estado (no agrega messages)
@@ -200,7 +200,7 @@ export class GraphInterpreterService {
     }
 
     // Modo normal: devuelve el mensaje al historial (con tools si corresponde)
-    const model = tools.length > 0 ? baseModel.bindTools(tools) : baseModel;
+    const model = tools.length > 0 ? (baseModel as any).bindTools(tools) : baseModel;
 
     return async (state: State & { messages: any[] }): Promise<Partial<State>> => {
       const result = await model.invoke([
@@ -213,7 +213,7 @@ export class GraphInterpreterService {
 
   private makeClassifierNode<State>(node: NodeDefinition, systemPrompt: string) {
     const config = node.config as unknown as ClassifierConfig;
-    const model = new ChatGoogleGenerativeAI({ model: 'gemini-2.5-flash' });
+    const model = this.llmFactory.create(config.provider, config.modelName);
 
     // Normalizar siempre a la forma multi-campo internamente
     const fieldDefs = config.fields ?? [
@@ -288,7 +288,7 @@ export class GraphInterpreterService {
   private makeHandoffNode<State>(node: NodeDefinition, systemPrompt: string) {
     const config = node.config as unknown as HumanHandoffConfig;
     const escalatedField = config.escalatedField ?? 'escalated';
-    const model = new ChatGoogleGenerativeAI({ model: 'gemini-2.5-flash' });
+    const model = this.llmFactory.create(config.provider, config.modelName);
 
     return async (state: State & { messages: any[] }): Promise<Partial<State>> => {
       const result = await model.invoke([
