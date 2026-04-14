@@ -42,7 +42,10 @@ export class CanalesController {
       config,
     );
 
-    const last = result.messages[result.messages.length - 1];
+    const last = result.messages.findLast((m: any) => m._getType() === 'ai');
+    if (!last) {
+      throw new BadRequestException('El grafo no generó una respuesta');
+    }
     const respuesta =
       typeof last.content === 'string'
         ? last.content

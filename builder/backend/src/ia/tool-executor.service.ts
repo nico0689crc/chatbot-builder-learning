@@ -92,17 +92,20 @@ export class ToolExecutorService {
       ...(conector.headers as object),
     };
 
-    let url = conector.url;
+    let url = conector.url.replace(/\{\{(\w+)\}\}/g, (_, key) => String(args[key] ?? ''));
+    const remainingArgs = Object.fromEntries(
+      Object.entries(args).filter(([k]) => !conector.url.includes(`{{${k}}}`)),
+    );
     let body: string | undefined;
 
     if (conector.metodo === 'GET') {
       const params = new URLSearchParams(
-        Object.entries(args).map(([k, v]) => [k, String(v)]),
+        Object.entries(remainingArgs).map(([k, v]) => [k, String(v)]),
       );
-      url = `${url}?${params.toString()}`;
+      url = params.size > 0 ? `${url}?${params.toString()}` : url;
       console.log("URL: ", url);
     } else {
-      body = JSON.stringify(args);
+      body = JSON.stringify(remainingArgs);
       console.log("BODY: ", body);
     }
 

@@ -25,12 +25,53 @@ import {
 @Injectable()
 export class GraphInterpreterService {
 
+  private validateFlow(flow: FlowDefinition): void {
+    const nodeNames = new Set(flow.nodes.map(n => n.nombre));
+    const errors: string[] = [];
+
+    // 1. Debe existir exactamente un origen __start__
+    const startEdges = flow.edges.filter(e => e.origen === '__start__');
+    if (startEdges.length === 0) errors.push('No hay arista desde __start__');
+    if (startEdges.length > 1) errors.push('Hay más de una arista desde __start__');
+
+    // 2. Todo nodo referenciado en aristas debe existir
+    for (const edge of flow.edges) {
+      if (edge.origen !== '__start__' && !nodeNames.has(edge.origen))
+        errors.push(`Arista con origen desconocido: "${edge.origen}"`);
+      if (edge.destino !== '__end__' && !nodeNames.has(edge.destino))
+        errors.push(`Arista con destino desconocido: "${edge.destino}"`);
+    }
+
+    // 3. Todo nodo llm_call con arista condicional "tools" debe apuntar a un tool_executor
+    const nodeByName = new Map(flow.nodes.map(n => [n.nombre, n]));
+    for (const node of flow.nodes.filter(n => n.tipo === 'llm_call')) {
+      const toolsEdge = flow.edges.find(e => e.origen === node.nombre && e.condicion === 'tools');
+      if (toolsEdge) {
+        const destNode = nodeByName.get(toolsEdge.destino);
+        if (!destNode || destNode.tipo !== 'tool_executor')
+          errors.push(`Nodo "${node.nombre}": la arista "tools" debe apuntar a un nodo tool_executor`);
+      }
+    }
+
+    // 4. Todo nodo debe tener al menos una arista de salida
+    for (const node of flow.nodes) {
+      const tieneArista = flow.edges.some(e => e.origen === node.nombre);
+      if (!tieneArista)
+        errors.push(`Nodo "${node.nombre}" no tiene aristas de salida`);
+    }
+
+    if (errors.length > 0)
+      throw new Error(`Flujo inválido:\n${errors.map(e => `  - ${e}`).join('\n')}`);
+  }
+
   buildFromDefinition(
     flow: FlowDefinition,
     systemPrompt: string,
     tools: any[],
     checkpointer: PostgresSaver,
   ) {
+    this.validateFlow(flow);
+
     // 1. Construir el estado dinámico
     const GraphState = this.buildDynamicAnnotation(flow.campos);
     type State = typeof GraphState.State;
@@ -146,7 +187,7 @@ export class GraphInterpreterService {
         ),
         required: Object.keys(config.outputFields),
       };
-      console.log("**** Schema", schema);
+
       const structuredModel = baseModel.withStructuredOutput(schema as any);
 
       return async (state: State & { messages: any[] }): Promise<Partial<State>> => {
@@ -207,12 +248,18 @@ export class GraphInterpreterService {
   private makeHttpRequestNode<State>(node: NodeDefinition) {
     const config = node.config as unknown as HttpRequestConfig;
 
-    return async (_state: State): Promise<Partial<State>> => {
+    return async (state: State): Promise<Partial<State>> => {
+      const interpolate = (template: string) =>
+        template.replace(/\{\{(\w+)\}\}/g, (_, key) => String((state as any)[key] ?? ''));
+
       try {
-        const response = await fetch(config.url, {
+        const url = interpolate(config.url);
+        const body = config.bodyTemplate ? interpolate(config.bodyTemplate) : undefined;
+
+        const response = await fetch(url, {
           method: config.method,
           headers: { 'Content-Type': 'application/json', ...(config.headers ?? {}) },
-          body: config.method !== 'GET' ? config.bodyTemplate : undefined,
+          body: config.method !== 'GET' ? body : undefined,
         });
         const data = await response.json();
 

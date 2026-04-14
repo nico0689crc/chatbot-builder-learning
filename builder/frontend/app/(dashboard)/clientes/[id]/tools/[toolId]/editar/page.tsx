@@ -28,6 +28,8 @@ export default function EditarToolPage({
   const [errorLoad, setErrorLoad] = useState("")
 
   // Form state — conector
+  const [descripcion, setDescripcion] = useState("")
+  const [url, setUrl] = useState("")
   const [metodo, setMetodo] = useState<"GET" | "POST" | "PUT">("GET")
   const [saving, setSaving] = useState(false)
   const [errorSave, setErrorSave] = useState("")
@@ -43,6 +45,8 @@ export default function EditarToolPage({
     api.tools.get(clienteId, toolId)
       .then((t) => {
         setTool(t)
+        setDescripcion(t.descripcion)
+        setUrl(t.conector?.url ?? "")
         if (t.conector?.metodo) setMetodo(t.conector.metodo as "GET" | "POST" | "PUT")
       })
       .catch((e) => setErrorLoad(e instanceof Error ? e.message : "Error al cargar la tool"))
@@ -59,12 +63,14 @@ export default function EditarToolPage({
     const form = new FormData(e.currentTarget)
     try {
       const updated = await api.tools.update(clienteId, toolId, {
-        descripcion: form.get("descripcion") as string,
+        descripcion,
         activa: form.get("activa") === "on",
-        url: form.get("url") as string,
+        url,
         metodo,
       })
       setTool(updated)
+      setDescripcion(updated.descripcion)
+      setUrl(updated.conector?.url ?? "")
       setSavedOk(true)
     } catch (e) {
       setErrorSave(e instanceof Error ? e.message : "Error al guardar")
@@ -156,7 +162,8 @@ export default function EditarToolPage({
               <Input
                 id="descripcion"
                 name="descripcion"
-                defaultValue={tool.descripcion}
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
                 required
               />
               <p className="text-xs text-muted-foreground">
@@ -190,7 +197,8 @@ export default function EditarToolPage({
                 )}
                 <Input
                   name="url"
-                  defaultValue={tool.conector?.url ?? ""}
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
                   required
                   className="flex-1"
                 />
