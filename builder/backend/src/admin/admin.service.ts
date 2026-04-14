@@ -93,11 +93,13 @@ export class AdminService {
   async actualizarSystemPrompt(clienteId: string, dto: ActualizarSystemPromptDto) {
     const cliente = await this.prisma.cliente.findUnique({ where: { id: clienteId } });
     if (!cliente) throw new NotFoundException(`Cliente ${clienteId} no encontrado`);
-    return this.prisma.cliente.update({
+    const result = await this.prisma.cliente.update({
       where: { id: clienteId },
       data: { systemPrompt: dto.systemPrompt },
       select: { id: true, systemPrompt: true },
     });
+    this.iaService.invalidateCache(clienteId);
+    return result;
   }
 
   async actualizarWidget(clienteId: string, dto: ActualizarWidgetDto) {
@@ -137,6 +139,7 @@ export class AdminService {
       });
     }
 
+    this.iaService.invalidateCache(clienteId);
     return this.obtenerTool(clienteId, toolId);
   }
 
