@@ -49,7 +49,14 @@ export function WidgetConfig({ cliente, apiUrl }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Widget</CardTitle>
+        <div className="flex justify-between">
+          <CardTitle className="text-base">Widget</CardTitle>
+          <Button className="bg-green-700">
+            <Link target="_blank" href={`/public/${cliente.slug}`}>
+              Ver página pública
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
 
@@ -144,9 +151,7 @@ export function WidgetConfig({ cliente, apiUrl }: Props) {
               {copied ? "Copiado ✓" : "Copiar"}
             </Button>
           </div>
-          <Link target="_blank" href={`/public/${cliente.slug}`} className="text-xs text-black underline underline-offset-2 mt-2 inline-block">
-            Ver página pública
-          </Link>
+
         </div>
 
       </CardContent>

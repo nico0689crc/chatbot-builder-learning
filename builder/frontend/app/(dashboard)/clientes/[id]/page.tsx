@@ -86,82 +86,102 @@ export default async function ClienteDetailPage({
         </div>
       )}
 
-      {/* System prompt */}
-      <SystemPromptEditor cliente={cliente} />
-
-      {/* Tools */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">
-            Tools {tools ? `(${tools.length})` : ""}
-          </CardTitle>
-          <Link
-            href={`/clientes/${cliente.id}/tools/nueva`}
-            className={cn(buttonVariants({ size: "sm" }))}
-          >
-            + Agregar tool
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {!tools ? (
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-              No se pudieron cargar las tools.
-            </p>
-          ) : tools.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              Este cliente no tiene tools configuradas
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Conector</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tools.map((tool) => (
-                  <TableRow key={tool.id}>
-                    <TableCell className="font-mono text-sm">{tool.nombre}</TableCell>
-                    <TableCell className="text-sm">{tool.descripcion}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {tool.conector ? `${tool.conector.tipo} · ${tool.conector.metodo}` : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={tool.activa ? "default" : "secondary"}>
-                        {tool.activa ? "Activa" : "Inactiva"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/clientes/${cliente.id}/tools/${tool.id}/editar`}
-                        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-                      >
-                        Editar
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Flujo */}
-      <FlujoSection clienteId={cliente.id} initialFlujo={flujo} />
-
       {/* Widget */}
       <WidgetConfig
         cliente={cliente}
         apiUrl={process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}
       />
 
-      {/* Meta / WhatsApp */}
-      <MetaConfig cliente={cliente} />
+      {/* System prompt */}
+      <SystemPromptEditor cliente={cliente} />
+
+      {/* Configuracion (collapse) */}
+      <details className="group rounded-lg border bg-card text-card-foreground shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-4 font-semibold text-base select-none">
+          Configuración
+          <svg
+            className="h-4 w-4 transition-transform group-open:rotate-180"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+
+        <div className="space-y-6 px-6 pb-6 pt-2">
+          {/* Flujo: diagrama + nodos + aristas + campos */}
+          <FlujoSection clienteId={cliente.id} initialFlujo={flujo} />
+          {/* Tools */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">
+                Tools {tools ? `(${tools.length})` : ""}
+              </CardTitle>
+              <Link
+                href={`/clientes/${cliente.id}/tools/nueva`}
+                className={cn(buttonVariants({ size: "sm" }))}
+              >
+                + Agregar tool
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {!tools ? (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+                  No se pudieron cargar las tools.
+                </p>
+              ) : tools.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Este cliente no tiene tools configuradas
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Conector</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tools.map((tool) => (
+                      <TableRow key={tool.id}>
+                        <TableCell className="font-mono text-sm">{tool.nombre}</TableCell>
+                        <TableCell className="text-sm">{tool.descripcion}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {tool.conector ? `${tool.conector.tipo} · ${tool.conector.metodo}` : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={tool.activa ? "default" : "secondary"}>
+                            {tool.activa ? "Activa" : "Inactiva"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            href={`/clientes/${cliente.id}/tools/${tool.id}/editar`}
+                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                          >
+                            Editar
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Meta / WhatsApp */}
+          <MetaConfig cliente={cliente} />
+        </div>
+      </details>
     </div>
   )
 }
