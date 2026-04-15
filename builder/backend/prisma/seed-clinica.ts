@@ -1,21 +1,17 @@
 /**
  * Seed: Bot híbrido de clínica médica
+ * Arquetipo 2 — Agenda & Turnos
  *
- * Inserta un caso complejo con:
- *   - 3 ramas (consulta, turno, urgencia)
- *   - 2 ciclos ReAct (rama consulta + rama turnos)
- *   - 3 tools HTTP (consultar_especialidades, buscar_disponibilidad, reservar_turno)
- *   - Estado dinámico con 3 campos
+ * Caso real: los recepcionistas coordinan toda la agenda manualmente desde el chat web.
+ * Cada consulta de disponibilidad les lleva 3-5 minutos de búsqueda manual.
+ * El bot consulta disponibilidad real en Supabase y reserva directamente.
+ *
+ * Flujo: 3 ramas (consulta / turno / urgencia) + ciclo ReAct en cada rama con tools.
+ * Las tool URLs apuntan al frontend Next.js (FRONTEND_API_URL).
  *
  * Uso:
  *   npx ts-node prisma/seed-clinica.ts
- *   npx ts-node prisma/seed-clinica.ts --clean   (elimina el cliente antes de insertar)
- *
- * Para testear con curl:
- *   curl -X POST http://localhost:3000/chat \
- *     -H "x-client-id: <clienteId>" \
- *     -H "Content-Type: application/json" \
- *     -d '{"mensaje":"quiero un turno con cardiología","sessionId":"debug-1"}'
+ *   npx ts-node prisma/seed-clinica.ts --clean
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -26,16 +22,11 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const prisma = new PrismaClient();
 
-const TURNOS_API_BASE = process.env.TURNOS_API_URL ?? 'http://localhost:4000';
-const BUSCAR_URL = `${TURNOS_API_BASE}/buscar-disponibilidad`;
-const RESERVAR_URL = `${TURNOS_API_BASE}/reservar-turno`;
-const ESPECIALIDADES_URL = `${TURNOS_API_BASE}/especialidades`;
-const MEDICOS_URL = `${TURNOS_API_BASE}/medicos`;
+const API_BASE = process.env.FRONTEND_API_URL ?? 'http://localhost:3001';
 
 async function main() {
   const clean = process.argv.includes('--clean');
 
-  // ── Limpiar si se pide ────────────────────────────────────────────────────
   if (clean) {
     const existing = await prisma.cliente.findFirst({
       where: { nombre: 'Clínica Demo' },
@@ -59,17 +50,19 @@ async function main() {
     }
   }
 
-  // ── 1. Cliente ────────────────────────────────────────────────────────────
+  // ── 1. Cliente ─────────────────────────────────────────────────────────────
   const cliente = await prisma.cliente.create({
     data: {
       nombre: 'Clínica Demo',
+      slug: 'clinica',
       arquetipo: 'turnos',
       systemPrompt:
         `Sos el asistente virtual de la Clínica Demo. La fecha de hoy es ${new Date().toISOString().slice(0, 10)}. ` +
         'Tu objetivo es ayudar a los pacientes con consultas, turnos y urgencias. ' +
         'Para consultas de disponibilidad de turnos usá SIEMPRE la tool buscar_disponibilidad. ' +
-        'Para reservar un turno usá SIEMPRE la tool reservar_turno. ' +
+        'Para reservar un turno usá SIEMPRE la tool reservar_turno — nunca confirmes un turno sin llamarla. ' +
         'Para saber qué especialidades ofrece la clínica usá SIEMPRE la tool consultar_especialidades. ' +
+        'Para saber qué médicos hay usá la tool consultar_medicos. ' +
         'Nunca inventes horarios ni confirmaciones — solo usá los datos que devuelvan las tools. ' +
         'Si el paciente menciona dolor fuerte, emergencia o urgencia médica, derivalo inmediatamente.',
       widgetNombre: 'Asistente Clínica Demo',
@@ -79,21 +72,20 @@ async function main() {
   });
   console.log(`\n✓ Cliente creado: ${cliente.id} — ${cliente.nombre}`);
 
-  // ── 2. Tools ──────────────────────────────────────────────────────────────
+  // ── 2. Tools ───────────────────────────────────────────────────────────────
 
-  // Tool 1: buscar_disponibilidad
   const toolBuscar = await prisma.tool.create({
     data: {
       clienteId: cliente.id,
       nombre: 'buscar_disponibilidad',
       descripcion:
-        'Busca turnos médicos disponibles. Devuelve una lista de horarios disponibles ' +
-        'para la especialidad y fecha solicitadas.',
+        'Busca turnos médicos disponibles para una especialidad y fecha. ' +
+        'Devuelve una lista de horarios disponibles con el médico asignado.',
       conector: {
         create: {
           tipo: 'API_REST',
-          url: BUSCAR_URL,
-          metodo: 'POST',
+          url: `${API_BASE}/api/clinica/disponibilidad`,
+          metodo: 'GET',
           headers: { 'Content-Type': 'application/json' },
         },
       },
@@ -103,13 +95,13 @@ async function main() {
             {
               nombre: 'especialidad',
               tipo: 'string',
-              descripcion: 'Especialidad médica (ej: cardiología, clínica general, pediatría)',
+              descripcion: 'Especialidad médica (ej: cardiología, pediatría, clínica general)',
               requerido: true,
             },
             {
               nombre: 'fecha',
               tipo: 'string',
-              descripcion: 'Fecha deseada en formato YYYY-MM-DD. Convertí siempre expresiones relativas ("mañana", "esta semana", "el jueves") a una fecha real antes de llamar esta tool.',
+              descripcion: 'Fecha en formato YYYY-MM-DD. Convertí expresiones como "mañana" o "el jueves" a fecha real antes de llamar esta tool.',
               requerido: true,
             },
           ],
@@ -118,18 +110,17 @@ async function main() {
     },
   });
 
-  // Tool 2: reservar_turno
   const toolReservar = await prisma.tool.create({
     data: {
       clienteId: cliente.id,
       nombre: 'reservar_turno',
       descripcion:
-        'Reserva un turno médico para el paciente. Devuelve el número de confirmación ' +
-        'y los detalles del turno reservado.',
+        'Reserva un turno médico para el paciente usando el turno_id devuelto por buscar_disponibilidad. ' +
+        'Devuelve la confirmación con todos los detalles del turno reservado.',
       conector: {
         create: {
           tipo: 'API_REST',
-          url: RESERVAR_URL,
+          url: `${API_BASE}/api/clinica/turnos`,
           metodo: 'POST',
           headers: { 'Content-Type': 'application/json' },
         },
@@ -138,15 +129,9 @@ async function main() {
         createMany: {
           data: [
             {
-              nombre: 'especialidad',
+              nombre: 'turno_id',
               tipo: 'string',
-              descripcion: 'Especialidad médica del turno a reservar',
-              requerido: true,
-            },
-            {
-              nombre: 'horario',
-              tipo: 'string',
-              descripcion: 'Horario exacto del turno (ej: "2026-04-15 10:30")',
+              descripcion: 'ID del turno obtenido de buscar_disponibilidad',
               requerido: true,
             },
             {
@@ -161,7 +146,6 @@ async function main() {
     },
   });
 
-  // Tool 3: consultar_especialidades
   const toolEspecialidades = await prisma.tool.create({
     data: {
       clienteId: cliente.id,
@@ -172,7 +156,7 @@ async function main() {
       conector: {
         create: {
           tipo: 'API_REST',
-          url: ESPECIALIDADES_URL,
+          url: `${API_BASE}/api/clinica/especialidades`,
           metodo: 'GET',
           headers: { 'Content-Type': 'application/json' },
         },
@@ -180,18 +164,17 @@ async function main() {
     },
   });
 
-  // Tool 4: consultar_medicos
   const toolMedicos = await prisma.tool.create({
     data: {
       clienteId: cliente.id,
       nombre: 'consultar_medicos',
       descripcion:
         'Consulta la lista de médicos disponibles en la clínica. ' +
-        'Usá esta tool cuando el paciente pregunte qué médicos ofrecen.',
+        'Usá esta tool cuando el paciente pregunte por médicos específicos o quiera saber quién atiende una especialidad.',
       conector: {
         create: {
           tipo: 'API_REST',
-          url: MEDICOS_URL,
+          url: `${API_BASE}/api/clinica/medicos`,
           metodo: 'GET',
           headers: { 'Content-Type': 'application/json' },
         },
@@ -204,25 +187,21 @@ async function main() {
   console.log(`✓ Tool creada: ${toolEspecialidades.id} — consultar_especialidades`);
   console.log(`✓ Tool creada: ${toolMedicos.id} — consultar_medicos`);
 
-  // ── 3. Flujo ──────────────────────────────────────────────────────────────
+  // ── 3. Flujo ───────────────────────────────────────────────────────────────
   const flujo = await prisma.flujoDef.create({
     data: {
       clienteId: cliente.id,
       nombre: 'Bot Híbrido Clínica',
-      descripcion: '3 ramas (consulta/turno/urgencia) + ciclo ReAct en FAQ (especialidades) y turnos',
-
-      // Estado dinámico
+      descripcion: '3 ramas (consulta / turno / urgencia) + ciclo ReAct en FAQ y turnos',
       campos: {
         createMany: {
           data: [
-            { nombre: 'categoria', tipo: 'string', reducer: 'last_wins', default: '"sin_clasificar"' },
-            { nombre: 'turno_id', tipo: 'string', reducer: 'last_wins', default: 'null' },
-            { nombre: 'escalated', tipo: 'boolean', reducer: 'last_wins', default: 'false' },
+            { nombre: 'categoria',  tipo: 'string',  reducer: 'last_wins', default: '"sin_clasificar"' },
+            { nombre: 'turno_id',   tipo: 'string',  reducer: 'last_wins', default: 'null' },
+            { nombre: 'escalated',  tipo: 'boolean', reducer: 'last_wins', default: 'false' },
           ],
         },
       },
-
-      // Nodos
       nodos: {
         createMany: {
           data: [
@@ -234,10 +213,10 @@ async function main() {
                 field: 'categoria',
                 categories: ['consulta', 'turno', 'urgencia'],
                 prompt:
-                  'Clasificá la intención del paciente en exactamente una de estas categorías:\n' +
-                  '"consulta": preguntas sobre servicios, documentación, horarios de atención, médicos, coberturas.\n' +
+                  'Clasificá la intención del paciente en exactamente una categoría:\n' +
+                  '"consulta": preguntas sobre especialidades, médicos, horarios de atención, coberturas o documentación.\n' +
                   '"turno": quiere pedir, reservar, modificar o cancelar un turno médico.\n' +
-                  '"urgencia": menciona dolor fuerte, emergencia, accidente, o necesita atención inmediata.',
+                  '"urgencia": menciona dolor fuerte, emergencia, accidente o necesita atención inmediata.',
               },
             },
             {
@@ -279,31 +258,20 @@ async function main() {
           ],
         },
       },
-
-      // Aristas
       aristas: {
         createMany: {
           data: [
-            // Entrada
-            { origen: '__start__', destino: 'clasificador', condicion: null },
-
-            // Routing desde clasificador
-            { origen: 'clasificador', destino: 'agente_faq', condicion: 'consulta' },
-            { origen: 'clasificador', destino: 'agente_turnos', condicion: 'turno' },
-            { origen: 'clasificador', destino: 'handoff', condicion: 'urgencia' },
-
-            // Ciclo ReAct: agente_faq ⇄ tools_faq (para consultar_especialidades)
-            { origen: 'agente_faq', destino: 'tools_faq', condicion: 'tools' },
-            { origen: 'agente_faq', destino: '__end__', condicion: '__end__' },
-            { origen: 'tools_faq', destino: 'agente_faq', condicion: null },
-
-            // Ciclo ReAct: agente_turnos ⇄ tools (para buscar/reservar turnos)
-            { origen: 'agente_turnos', destino: 'tools', condicion: 'tools' },
-            { origen: 'agente_turnos', destino: '__end__', condicion: '__end__' },
-            { origen: 'tools', destino: 'agente_turnos', condicion: null },
-
-            // Salidas directas
-            { origen: 'handoff', destino: '__end__', condicion: null },
+            { origen: '__start__',      destino: 'clasificador',  condicion: null },
+            { origen: 'clasificador',   destino: 'agente_faq',    condicion: 'consulta' },
+            { origen: 'clasificador',   destino: 'agente_turnos', condicion: 'turno' },
+            { origen: 'clasificador',   destino: 'handoff',       condicion: 'urgencia' },
+            { origen: 'agente_faq',     destino: 'tools_faq',     condicion: 'tools' },
+            { origen: 'agente_faq',     destino: '__end__',       condicion: '__end__' },
+            { origen: 'tools_faq',      destino: 'agente_faq',    condicion: null },
+            { origen: 'agente_turnos',  destino: 'tools',         condicion: 'tools' },
+            { origen: 'agente_turnos',  destino: '__end__',       condicion: '__end__' },
+            { origen: 'tools',          destino: 'agente_turnos', condicion: null },
+            { origen: 'handoff',        destino: '__end__',       condicion: null },
           ],
         },
       },
@@ -316,33 +284,32 @@ async function main() {
   });
 
   console.log(`✓ Flujo creado: ${flujo.id} — ${flujo.nombre}`);
-  console.log(`  Campos: ${flujo.campos.length}`);
-  console.log(`  Nodos:  ${flujo.nodos.length} → ${flujo.nodos.map(n => n.nombre).join(', ')}`);
+  console.log(`  Campos:  ${flujo.campos.length}`);
+  console.log(`  Nodos:   ${flujo.nodos.length} → ${flujo.nodos.map(n => n.nombre).join(', ')}`);
   console.log(`  Aristas: ${flujo.aristas.length}`);
 
-  // ── Resumen ───────────────────────────────────────────────────────────────
   console.log('\n─────────────────────────────────────────────');
-  console.log('Seed completado. Para debuggear:');
+  console.log('Seed completado. Para testear:');
   console.log('');
   console.log(`  CLIENT_ID="${cliente.id}"`);
   console.log('');
-  console.log('  # Rama consulta (sin tools, sin ciclo):');
+  console.log('  # Rama consulta (llama consultar_especialidades)');
   console.log(`  curl -s -X POST http://localhost:3000/chat \\`);
   console.log(`    -H "x-client-id: ${cliente.id}" \\`);
   console.log(`    -H "Content-Type: application/json" \\`);
-  console.log(`    -d '{"mensaje":"¿Qué especialidades tienen?","sessionId":"debug-faq"}' | jq`);
+  console.log(`    -d '{"mensaje":"¿Qué especialidades tienen?","sessionId":"c1"}' | jq`);
   console.log('');
-  console.log('  # Rama turno (con ciclo ReAct):');
+  console.log('  # Rama turno (llama buscar_disponibilidad → reservar_turno)');
   console.log(`  curl -s -X POST http://localhost:3000/chat \\`);
   console.log(`    -H "x-client-id: ${cliente.id}" \\`);
   console.log(`    -H "Content-Type: application/json" \\`);
-  console.log(`    -d '{"mensaje":"Quiero un turno con cardiología para mañana","sessionId":"debug-turno"}' | jq`);
+  console.log(`    -d '{"mensaje":"Quiero un turno con cardiología para mañana","sessionId":"c2"}' | jq`);
   console.log('');
-  console.log('  # Rama urgencia (handoff, escalated=true):');
+  console.log('  # Rama urgencia (handoff)');
   console.log(`  curl -s -X POST http://localhost:3000/chat \\`);
   console.log(`    -H "x-client-id: ${cliente.id}" \\`);
   console.log(`    -H "Content-Type: application/json" \\`);
-  console.log(`    -d '{"mensaje":"Tengo un dolor en el pecho muy fuerte","sessionId":"debug-urgencia"}' | jq`);
+  console.log(`    -d '{"mensaje":"Tengo un dolor en el pecho muy fuerte","sessionId":"c3"}' | jq`);
   console.log('─────────────────────────────────────────────\n');
 }
 

@@ -1,6 +1,7 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  console.log('path', path)
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
@@ -23,6 +24,7 @@ export type Arquetipo = "faq" | "soporte" | "turnos" | "ventas" | "transaccional
 
 export interface Cliente {
   id: string
+  slug: string | null
   nombre: string
   arquetipo: Arquetipo
   systemPrompt: string
@@ -207,6 +209,7 @@ export const api = {
   clientes: {
     list: () => request<Cliente[]>("/admin/clientes"),
     get: (id: string) => request<Cliente>(`/admin/clientes/${id}`),
+    getBySlug: (slug: string) => request<Cliente>(`/clientes/slug/${slug}`),
     create: (data: CrearClientePayload) =>
       request<Cliente>("/admin/clientes", {
         method: "POST",

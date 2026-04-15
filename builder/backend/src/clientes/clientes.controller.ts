@@ -12,6 +12,11 @@ export class ClientesController {
     return this.clientesService.findAll();
   }
 
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.clientesService.findBySlug(slug);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clientesService.findById(id);
@@ -23,4 +28,5 @@ export class ClientesController {
   ) {
     return this.clientesService.create(body);
   }
+
 }

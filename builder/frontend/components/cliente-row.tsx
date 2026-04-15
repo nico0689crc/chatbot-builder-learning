@@ -41,10 +41,17 @@ export function ClienteRow({ cliente }: { cliente: Cliente }) {
       </TableCell>
       <TableCell className="flex items-center gap-1 justify-end">
         <Link
+          href={`/public/${cliente.slug}`}
+          target="_blank"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Ver chatbot →
+        </Link>
+        <Link
           href={`/clientes/${cliente.id}`}
           className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
         >
-          Ver →
+          Editar →
         </Link>
         <button
           onClick={handleDelete}

@@ -144,7 +144,7 @@ export function WidgetConfig({ cliente, apiUrl }: Props) {
               {copied ? "Copiado ✓" : "Copiar"}
             </Button>
           </div>
-          <Link target="_blank" href={`/public/${cliente.id}`} className="text-xs text-black underline underline-offset-2 mt-2 inline-block">
+          <Link target="_blank" href={`/public/${cliente.slug}`} className="text-xs text-black underline underline-offset-2 mt-2 inline-block">
             Ver página pública
           </Link>
         </div>

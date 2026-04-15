@@ -11,6 +11,12 @@ export class ClientesService {
     return cliente;
   }
 
+  async findBySlug(slug: string) {
+    const cliente = await this.prisma.cliente.findUnique({ where: { slug } });
+    if (!cliente) throw new NotFoundException(`Cliente con slug "${slug}" no encontrado`);
+    return cliente;
+  }
+
   async findAll() {
     return this.prisma.cliente.findMany({ where: { activo: true } });
   }
@@ -22,4 +28,5 @@ export class ClientesService {
   }) {
     return this.prisma.cliente.create({ data });
   }
+
 }
