@@ -40,6 +40,15 @@ export function ClienteRow({ cliente }: { cliente: Cliente }) {
         {new Date(cliente.creadoEn).toLocaleDateString("es-AR")}
       </TableCell>
       <TableCell className="flex items-center gap-1 justify-end">
+        {cliente.slug === "gymsmartaccess" && (
+          <Link
+            href={`https://gymsmartaccess.com`}
+            target="_blank"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
+            Ver en sitio →
+          </Link>
+        )}
         <Link
           href={`/public/${cliente.slug}`}
           target="_blank"
@@ -61,6 +70,6 @@ export function ClienteRow({ cliente }: { cliente: Cliente }) {
           {deleting ? "Eliminando..." : "Eliminar"}
         </button>
       </TableCell>
-    </TableRow>
+    </TableRow >
   )
 }
