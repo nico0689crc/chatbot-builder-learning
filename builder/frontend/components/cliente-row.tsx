@@ -62,13 +62,15 @@ export function ClienteRow({ cliente }: { cliente: Cliente }) {
         >
           Editar →
         </Link>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1.5 transition-colors"
-        >
-          {deleting ? "Eliminando..." : "Eliminar"}
-        </button>
+        {cliente.slug !== "gymsmartaccess" &&
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1.5 transition-colors"
+          >
+            {deleting ? "Eliminando..." : "Eliminar"}
+          </button>
+        }
       </TableCell>
     </TableRow >
   )
