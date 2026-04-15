@@ -103,10 +103,8 @@ export class ToolExecutorService {
         Object.entries(remainingArgs).map(([k, v]) => [k, String(v)]),
       );
       url = params.size > 0 ? `${url}?${params.toString()}` : url;
-      console.log("URL: ", url);
     } else {
       body = JSON.stringify(remainingArgs);
-      console.log("BODY: ", body);
     }
 
     const response = await fetch(url, {
